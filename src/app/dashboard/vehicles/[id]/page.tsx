@@ -11,6 +11,12 @@ import {
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
+import { InviteCodePanel } from "./invite-code-panel";
+
+interface GarageAccessRow {
+  id: string;
+  garage: { name: string } | null;
+}
 
 const DEFECT_BADGE_CLASS: Record<string, string> = {
   DANGEROUS: "bg-red-700 text-white",
@@ -111,6 +117,17 @@ export default async function VehiclePage({
 
   const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
 
+  const { data: accessGrants } = await supabase
+    .from("vehicle_garage_access")
+    .select("id, garage:garages(name)")
+    .eq("vehicle_id", id)
+    .is("revoked_at", null)
+    .returns<GarageAccessRow[]>();
+
+  const garagesWithAccess = (accessGrants ?? [])
+    .map((row) => row.garage?.name)
+    .filter((name): name is string => Boolean(name));
+
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
       <Link href="/dashboard" className="text-sm text-neutral-500">
@@ -138,6 +155,13 @@ export default async function VehiclePage({
           {serviceStatus.message}
         </span>
       </div>
+
+      <InviteCodePanel vehicleId={id} />
+      {garagesWithAccess.length > 0 && (
+        <p className="text-sm text-neutral-600">
+          Garages with access: {garagesWithAccess.join(", ")}
+        </p>
+      )}
 
       <div className="flex gap-2">
         <Link

@@ -96,12 +96,20 @@ export default async function DashboardPage() {
       </div>
       <p className="text-sm text-neutral-600">Signed in as {user.email}</p>
 
-      <Link
-        href="/dashboard/vehicles/add"
-        className="rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
-      >
-        Add a vehicle
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href="/dashboard/vehicles/add"
+          className="flex-1 rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
+        >
+          Add a vehicle
+        </Link>
+        <Link
+          href="/dashboard/garage"
+          className="flex-1 rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
+        >
+          Garage portal
+        </Link>
+      </div>
 
       {vehicles.length === 0 ? (
         <p className="text-sm text-neutral-600">No vehicles yet.</p>
