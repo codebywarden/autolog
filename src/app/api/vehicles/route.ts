@@ -113,6 +113,22 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    // Logged explicitly here rather than via a trigger — this insert
+    // runs through the service-role client, so auth.uid() would be
+    // null inside a trigger fired by it. The route already knows who's
+    // authenticated from the getUser() check above.
+    const { error: logError } = await admin.from("activity_log").insert({
+      vehicle_id: vehicleId,
+      actor_id: user.id,
+      actor_label: user.email ?? "Owner",
+      action: "vehicle_added",
+      detail: { vrm: normalized },
+    });
+
+    if (logError) {
+      console.error(logError);
+    }
   }
 
   const motRows = mapMotHistoryRows(vehicleId, dvsaData);

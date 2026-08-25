@@ -94,6 +94,27 @@ export async function POST(request: Request) {
     console.error(markRedeemedError);
   }
 
+  const { data: garage } = await admin
+    .from("garages")
+    .select("name")
+    .eq("id", membership.garage_id)
+    .maybeSingle();
+
+  // Same reasoning as the add-vehicle route: this grant was written via
+  // service-role, so a trigger on vehicle_garage_access would see a
+  // null auth.uid() — log it explicitly instead.
+  const { error: logError } = await admin.from("activity_log").insert({
+    vehicle_id: invite.vehicle_id,
+    actor_id: user.id,
+    actor_label: garage?.name ?? "Garage",
+    action: "garage_access_granted",
+    detail: { garage_id: membership.garage_id },
+  });
+
+  if (logError) {
+    console.error(logError);
+  }
+
   const { data: vehicle } = await admin
     .from("vehicles")
     .select("vrm")

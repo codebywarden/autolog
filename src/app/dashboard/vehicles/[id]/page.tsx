@@ -39,6 +39,34 @@ interface AttachmentLink {
   url: string | null;
 }
 
+interface ActivityLogRow {
+  id: string;
+  actor_label: string;
+  action: string;
+  detail: Record<string, unknown> | null;
+  created_at: string;
+}
+
+function describeActivity(row: ActivityLogRow): string {
+  switch (row.action) {
+    case "vehicle_added":
+      return `${row.actor_label} added this vehicle`;
+    case "entry_added":
+      return `${row.actor_label} added a service entry`;
+    case "verified_entry_added":
+      return `${row.actor_label} added a verified service entry`;
+    case "garage_access_granted":
+      return `${row.actor_label} was granted access`;
+    case "garage_access_revoked": {
+      const garageName =
+        (row.detail?.garage_name as string | undefined) ?? "a garage";
+      return `${row.actor_label} revoked ${garageName}'s access`;
+    }
+    default:
+      return `${row.actor_label} — ${row.action}`;
+  }
+}
+
 const SIGNED_URL_TTL_SECONDS = 600;
 
 export default async function VehiclePage({
@@ -128,6 +156,13 @@ export default async function VehiclePage({
   const garageAccessGrants = (accessGrants ?? [])
     .filter((row) => row.garage !== null)
     .map((row) => ({ id: row.id, garageName: row.garage!.name }));
+
+  const { data: activityLog } = await supabase
+    .from("activity_log")
+    .select("id, actor_label, action, detail, created_at")
+    .eq("vehicle_id", id)
+    .order("created_at", { ascending: false })
+    .returns<ActivityLogRow[]>();
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
@@ -277,6 +312,24 @@ export default async function VehiclePage({
             ),
           )}
         </ul>
+      )}
+
+      {activityLog && activityLog.length > 0 && (
+        <details className="rounded border border-neutral-300 p-3 text-sm">
+          <summary className="cursor-pointer font-semibold">
+            Activity log
+          </summary>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {activityLog.map((row) => (
+              <li key={row.id} className="text-neutral-600">
+                <span className="font-mono text-xs text-neutral-500">
+                  {row.created_at.slice(0, 10)}
+                </span>{" "}
+                {describeActivity(row)}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </main>
   );
