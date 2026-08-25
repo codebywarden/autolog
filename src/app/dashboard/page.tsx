@@ -110,6 +110,12 @@ export default async function DashboardPage() {
           Garage portal
         </Link>
       </div>
+      <Link
+        href="/dashboard/vehicles/receive"
+        className="rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
+      >
+        Receive a vehicle
+      </Link>
 
       {vehicles.length === 0 ? (
         <p className="text-sm text-neutral-600">No vehicles yet.</p>

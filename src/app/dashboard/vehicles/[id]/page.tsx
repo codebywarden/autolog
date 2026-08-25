@@ -15,6 +15,8 @@ import { InviteCodePanel } from "./invite-code-panel";
 import { GarageAccessList } from "./garage-access-list";
 import { SharePanel } from "./share-panel";
 import { ShareLinkList } from "./share-link-list";
+import { TransferPanel } from "./transfer-panel";
+import { TransferCodeList } from "./transfer-code-list";
 
 interface GarageAccessRow {
   id: string;
@@ -69,6 +71,11 @@ function describeActivity(row: ActivityLogRow): string {
       const garageName =
         (row.detail?.garage_name as string | undefined) ?? "a garage";
       return `${row.actor_label} revoked ${garageName}'s access`;
+    }
+    case "ownership_transferred": {
+      const from = (row.detail?.from as string | undefined) ?? "the previous owner";
+      const to = (row.detail?.to as string | undefined) ?? row.actor_label;
+      return `Ownership transferred from ${from} to ${to}`;
     }
     default:
       return `${row.actor_label} — ${row.action}`;
@@ -177,6 +184,21 @@ export default async function VehiclePage({
     id: row.id,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
+  }));
+
+  const { data: transferCodeRows } = await supabase
+    .from("vehicle_transfer_codes")
+    .select("id, code, expires_at")
+    .eq("vehicle_id", id)
+    .is("redeemed_at", null)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false })
+    .returns<{ id: string; code: string; expires_at: string }[]>();
+
+  const transferCodes = (transferCodeRows ?? []).map((row) => ({
+    id: row.id,
+    code: row.code,
+    expiresAt: row.expires_at,
   }));
 
   const { data: activityLog } = await supabase
@@ -355,6 +377,9 @@ export default async function VehiclePage({
           </ul>
         </details>
       )}
+
+      <TransferPanel vehicleId={id} />
+      <TransferCodeList codes={transferCodes} />
     </main>
   );
 }

@@ -72,13 +72,13 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!existingOwnership) {
-      // Someone else currently owns this vehicle in AutoLog. Ownership
-      // transfer (phase 3) is what should handle this — for MVP we
-      // refuse rather than silently taking over their record.
+      // Someone else currently owns this vehicle in AutoLog — refuse
+      // rather than silently taking over their record. Ask the current
+      // owner to use the transfer flow instead of adding it directly.
       return NextResponse.json(
         {
           error:
-            "This vehicle is already registered by another AutoLog account. Ownership transfer isn't available yet.",
+            "This vehicle is already registered by another AutoLog account. Ask the current owner to transfer it to you from their vehicle page instead.",
         },
         { status: 409 },
       );
