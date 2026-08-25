@@ -54,16 +54,18 @@ export default async function DashboardPage() {
       ) : (
         <ul className="flex flex-col gap-2">
           {vehicles.map((vehicle) => (
-            <li
-              key={vehicle.id}
-              className="rounded border border-neutral-300 p-3 text-sm"
-            >
-              <p className="font-semibold">{vehicle.vrm}</p>
-              <p className="text-neutral-600">
-                {[vehicle.make, vehicle.model, vehicle.colour]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
+            <li key={vehicle.id}>
+              <Link
+                href={`/dashboard/vehicles/${vehicle.id}`}
+                className="block rounded border border-neutral-300 p-3 text-sm hover:border-neutral-400"
+              >
+                <p className="font-semibold">{vehicle.vrm}</p>
+                <p className="text-neutral-600">
+                  {[vehicle.make, vehicle.model, vehicle.colour]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </Link>
             </li>
           ))}
         </ul>
