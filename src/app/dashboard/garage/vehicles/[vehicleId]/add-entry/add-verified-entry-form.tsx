@@ -29,6 +29,7 @@ export function AddVerifiedEntryForm({
   const [serviceType, setServiceType] =
     useState<(typeof SERVICE_TYPES)[number]>("service");
   const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +50,7 @@ export function AddVerifiedEntryForm({
         return;
       }
 
-      const { error: insertError } = await supabase
+      const { data: entry, error: insertError } = await supabase
         .from("service_entries")
         .insert({
           vehicle_id: vehicleId,
@@ -60,12 +61,48 @@ export function AddVerifiedEntryForm({
           mileage: mileage ? Number(mileage) : null,
           service_type: serviceType,
           notes: notes || null,
-        });
+        })
+        .select("id")
+        .single();
 
-      if (insertError) {
-        setError(insertError.message);
+      if (insertError || !entry) {
+        setError(insertError?.message ?? "Failed to save entry");
         setSaving(false);
         return;
+      }
+
+      if (file) {
+        const path = `${vehicleId}/${entry.id}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("invoices")
+          .upload(path, file);
+
+        if (uploadError) {
+          setError(
+            `Entry saved, but the file didn't upload: ${uploadError.message}`,
+          );
+          setSaving(false);
+          return;
+        }
+
+        const { error: attachmentError } = await supabase
+          .from("file_attachments")
+          .insert({
+            vehicle_id: vehicleId,
+            service_entry_id: entry.id,
+            uploaded_by: user.id,
+            storage_path: path,
+            file_name: file.name,
+            mime_type: file.type,
+          });
+
+        if (attachmentError) {
+          setError(
+            `Entry saved, but the attachment record failed: ${attachmentError.message}`,
+          );
+          setSaving(false);
+          return;
+        }
       }
 
       router.push(`/dashboard/garage/vehicles/${vehicleId}`);
@@ -130,6 +167,16 @@ export function AddVerifiedEntryForm({
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
             className="rounded border border-neutral-300 px-3 py-2"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Invoice (photo or PDF, optional)
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            className="text-sm"
           />
         </label>
 
