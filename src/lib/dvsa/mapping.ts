@@ -48,6 +48,10 @@ export function mapMotHistoryRows(vehicleId: string, data: DvsaVehicleResponse) 
     vehicle_id: vehicleId,
     mot_test_number: test.motTestNumber,
     test_date: test.completedDate.slice(0, 10),
+    // Full timestamp, kept alongside test_date so same-day retests
+    // (fail in the morning, pass after a repair that afternoon) still
+    // order correctly — test_date alone can't distinguish them.
+    completed_at: test.completedDate,
     expiry_date: test.expiryDate,
     result: test.testResult === "PASSED" ? "PASS" : "FAIL",
     odometer_value: test.odometerValue ? Number(test.odometerValue) : null,

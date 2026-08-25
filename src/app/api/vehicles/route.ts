@@ -117,12 +117,12 @@ export async function POST(request: Request) {
 
   const motRows = mapMotHistoryRows(vehicleId, dvsaData);
   if (motRows.length > 0) {
+    // Update rather than ignore on conflict: re-adding a vehicle re-syncs
+    // its MOT rows with whatever DVSA (or our own mapping) currently
+    // says, instead of freezing them at whatever was true on first import.
     const { error: motError } = await admin
       .from("mot_history")
-      .upsert(motRows, {
-        onConflict: "vehicle_id,mot_test_number",
-        ignoreDuplicates: true,
-      });
+      .upsert(motRows, { onConflict: "vehicle_id,mot_test_number" });
 
     if (motError) {
       // Not fatal — the vehicle and ownership are already saved. MOT

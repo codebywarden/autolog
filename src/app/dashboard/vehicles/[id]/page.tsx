@@ -15,15 +15,31 @@ interface ServiceEntry {
 interface MotHistoryRow {
   id: string;
   test_date: string;
+  completed_at: string;
   expiry_date: string | null;
   result: "PASS" | "FAIL";
   odometer_value: number | null;
   odometer_unit: string | null;
 }
 
+interface Attachment {
+  id: string;
+  service_entry_id: string | null;
+  storage_path: string;
+  file_name: string | null;
+}
+
+interface AttachmentLink {
+  id: string;
+  fileName: string;
+  url: string | null;
+}
+
 type TimelineItem =
   | { kind: "service"; date: string; entry: ServiceEntry }
   | { kind: "mot"; date: string; entry: MotHistoryRow };
+
+const SIGNED_URL_TTL_SECONDS = 600;
 
 export default async function VehiclePage({
   params,
@@ -50,22 +66,50 @@ export default async function VehiclePage({
     notFound();
   }
 
-  const [{ data: serviceEntries }, { data: motHistory }] = await Promise.all([
-    supabase
-      .from("service_entries")
-      .select(
-        "id, entry_date, mileage, service_type, garage_name, notes, verified",
-      )
-      .eq("vehicle_id", id)
-      .order("entry_date", { ascending: false })
-      .returns<ServiceEntry[]>(),
-    supabase
-      .from("mot_history")
-      .select("id, test_date, expiry_date, result, odometer_value, odometer_unit")
-      .eq("vehicle_id", id)
-      .order("test_date", { ascending: false })
-      .returns<MotHistoryRow[]>(),
-  ]);
+  const [{ data: serviceEntries }, { data: motHistory }, { data: attachments }] =
+    await Promise.all([
+      supabase
+        .from("service_entries")
+        .select(
+          "id, entry_date, mileage, service_type, garage_name, notes, verified",
+        )
+        .eq("vehicle_id", id)
+        .order("entry_date", { ascending: false })
+        .returns<ServiceEntry[]>(),
+      supabase
+        .from("mot_history")
+        .select(
+          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit",
+        )
+        .eq("vehicle_id", id)
+        .order("completed_at", { ascending: false })
+        .returns<MotHistoryRow[]>(),
+      supabase
+        .from("file_attachments")
+        .select("id, service_entry_id, storage_path, file_name")
+        .eq("vehicle_id", id)
+        .returns<Attachment[]>(),
+    ]);
+
+  // Signed URLs, not public ones — the bucket is private, so each link
+  // is scoped to this request and expires rather than being shareable
+  // indefinitely.
+  const attachmentsByEntry = new Map<string, AttachmentLink[]>();
+  for (const attachment of attachments ?? []) {
+    if (!attachment.service_entry_id) continue;
+
+    const { data: signed } = await supabase.storage
+      .from("invoices")
+      .createSignedUrl(attachment.storage_path, SIGNED_URL_TTL_SECONDS);
+
+    const list = attachmentsByEntry.get(attachment.service_entry_id) ?? [];
+    list.push({
+      id: attachment.id,
+      fileName: attachment.file_name ?? "Attachment",
+      url: signed?.signedUrl ?? null,
+    });
+    attachmentsByEntry.set(attachment.service_entry_id, list);
+  }
 
   const timeline: TimelineItem[] = [
     ...(serviceEntries ?? []).map((entry) => ({
@@ -156,6 +200,24 @@ export default async function VehiclePage({
                 {item.entry.garage_name && <p>{item.entry.garage_name}</p>}
                 {item.entry.notes && (
                   <p className="text-neutral-600">{item.entry.notes}</p>
+                )}
+                {(attachmentsByEntry.get(item.entry.id) ?? []).map(
+                  (attachment) =>
+                    attachment.url ? (
+                      <a
+                        key={attachment.id}
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block text-blue-700 underline"
+                      >
+                        📎 {attachment.fileName}
+                      </a>
+                    ) : (
+                      <p key={attachment.id} className="mt-1 text-neutral-500">
+                        📎 {attachment.fileName} (link unavailable)
+                      </p>
+                    ),
                 )}
               </li>
             ),
