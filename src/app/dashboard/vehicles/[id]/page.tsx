@@ -13,10 +13,18 @@ import {
 } from "@/lib/timeline";
 import { InviteCodePanel } from "./invite-code-panel";
 import { GarageAccessList } from "./garage-access-list";
+import { SharePanel } from "./share-panel";
+import { ShareLinkList } from "./share-link-list";
 
 interface GarageAccessRow {
   id: string;
   garage: { name: string } | null;
+}
+
+interface ShareLinkRow {
+  id: string;
+  expires_at: string;
+  created_at: string;
 }
 
 const DEFECT_BADGE_CLASS: Record<string, string> = {
@@ -157,6 +165,20 @@ export default async function VehiclePage({
     .filter((row) => row.garage !== null)
     .map((row) => ({ id: row.id, garageName: row.garage!.name }));
 
+  const { data: shareLinkRows } = await supabase
+    .from("vehicle_share_links")
+    .select("id, expires_at, created_at")
+    .eq("vehicle_id", id)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false })
+    .returns<ShareLinkRow[]>();
+
+  const shareLinks = (shareLinkRows ?? []).map((row) => ({
+    id: row.id,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+  }));
+
   const { data: activityLog } = await supabase
     .from("activity_log")
     .select("id, actor_label, action, detail, created_at")
@@ -194,6 +216,8 @@ export default async function VehiclePage({
 
       <InviteCodePanel vehicleId={id} />
       <GarageAccessList grants={garageAccessGrants} />
+      <SharePanel vehicleId={id} />
+      <ShareLinkList links={shareLinks} />
 
       <div className="flex gap-2">
         <Link
