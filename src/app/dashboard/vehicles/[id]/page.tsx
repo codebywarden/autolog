@@ -6,33 +6,11 @@ import {
   computeServiceStatus,
   REMINDER_BADGE_CLASS,
 } from "@/lib/reminders";
-
-interface ServiceEntry {
-  id: string;
-  entry_date: string;
-  mileage: number | null;
-  service_type: string;
-  garage_name: string | null;
-  notes: string | null;
-  verified: boolean;
-}
-
-interface MotDefect {
-  text: string;
-  type: "ADVISORY" | "MINOR" | "MAJOR" | "DANGEROUS" | string;
-  dangerous: boolean;
-}
-
-interface MotHistoryRow {
-  id: string;
-  test_date: string;
-  completed_at: string;
-  expiry_date: string | null;
-  result: "PASS" | "FAIL";
-  odometer_value: number | null;
-  odometer_unit: string | null;
-  raw_data: { defects?: MotDefect[] } | null;
-}
+import {
+  buildTimeline,
+  type ServiceEntry,
+  type MotHistoryRow,
+} from "@/lib/timeline";
 
 const DEFECT_BADGE_CLASS: Record<string, string> = {
   DANGEROUS: "bg-red-700 text-white",
@@ -53,10 +31,6 @@ interface AttachmentLink {
   fileName: string;
   url: string | null;
 }
-
-type TimelineItem =
-  | { kind: "service"; date: string; entry: ServiceEntry }
-  | { kind: "mot"; date: string; entry: MotHistoryRow };
 
 const SIGNED_URL_TTL_SECONDS = 600;
 
@@ -135,21 +109,7 @@ export default async function VehiclePage({
     serviceEntries?.[0]?.entry_date ?? null,
   );
 
-  const timeline: TimelineItem[] = [
-    ...(serviceEntries ?? []).map((entry) => ({
-      kind: "service" as const,
-      date: entry.entry_date,
-      entry,
-    })),
-    ...(motHistory ?? []).map((entry) => ({
-      kind: "mot" as const,
-      // Full timestamp as the sort key, not test_date — otherwise two
-      // same-day tests are only ordered correctly by coincidence (relying
-      // on the DB's row order surviving a stable sort on a tied date).
-      date: entry.completed_at,
-      entry,
-    })),
-  ].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
@@ -179,12 +139,20 @@ export default async function VehiclePage({
         </span>
       </div>
 
-      <Link
-        href={`/dashboard/vehicles/${id}/add-entry`}
-        className="rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
-      >
-        Add service entry
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href={`/dashboard/vehicles/${id}/add-entry`}
+          className="flex-1 rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
+        >
+          Add service entry
+        </Link>
+        <a
+          href={`/api/vehicles/${id}/export`}
+          className="flex-1 rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
+        >
+          Export PDF
+        </a>
+      </div>
 
       {timeline.length === 0 ? (
         <p className="text-sm text-neutral-600">No history yet.</p>
