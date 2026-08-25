@@ -119,7 +119,10 @@ export default async function VehiclePage({
     })),
     ...(motHistory ?? []).map((entry) => ({
       kind: "mot" as const,
-      date: entry.test_date,
+      // Full timestamp as the sort key, not test_date — otherwise two
+      // same-day tests are only ordered correctly by coincidence (relying
+      // on the DB's row order surviving a stable sort on a tied date).
+      date: entry.completed_at,
       entry,
     })),
   ].sort((a, b) => (a.date < b.date ? 1 : -1));
