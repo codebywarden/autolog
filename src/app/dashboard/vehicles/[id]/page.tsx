@@ -12,6 +12,7 @@ import {
   type MotHistoryRow,
 } from "@/lib/timeline";
 import { InviteCodePanel } from "./invite-code-panel";
+import { GarageAccessList } from "./garage-access-list";
 
 interface GarageAccessRow {
   id: string;
@@ -124,9 +125,9 @@ export default async function VehiclePage({
     .is("revoked_at", null)
     .returns<GarageAccessRow[]>();
 
-  const garagesWithAccess = (accessGrants ?? [])
-    .map((row) => row.garage?.name)
-    .filter((name): name is string => Boolean(name));
+  const garageAccessGrants = (accessGrants ?? [])
+    .filter((row) => row.garage !== null)
+    .map((row) => ({ id: row.id, garageName: row.garage!.name }));
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
@@ -157,11 +158,7 @@ export default async function VehiclePage({
       </div>
 
       <InviteCodePanel vehicleId={id} />
-      {garagesWithAccess.length > 0 && (
-        <p className="text-sm text-neutral-600">
-          Garages with access: {garagesWithAccess.join(", ")}
-        </p>
-      )}
+      <GarageAccessList grants={garageAccessGrants} />
 
       <div className="flex gap-2">
         <Link
