@@ -12,6 +12,12 @@ interface ServiceEntry {
   verified: boolean;
 }
 
+interface MotDefect {
+  text: string;
+  type: "ADVISORY" | "MINOR" | "MAJOR" | "DANGEROUS" | string;
+  dangerous: boolean;
+}
+
 interface MotHistoryRow {
   id: string;
   test_date: string;
@@ -20,7 +26,15 @@ interface MotHistoryRow {
   result: "PASS" | "FAIL";
   odometer_value: number | null;
   odometer_unit: string | null;
+  raw_data: { defects?: MotDefect[] } | null;
 }
+
+const DEFECT_BADGE_CLASS: Record<string, string> = {
+  DANGEROUS: "bg-red-700 text-white",
+  MAJOR: "bg-orange-600 text-white",
+  MINOR: "bg-yellow-500 text-black",
+  ADVISORY: "bg-neutral-200 text-neutral-700",
+};
 
 interface Attachment {
   id: string;
@@ -79,7 +93,7 @@ export default async function VehiclePage({
       supabase
         .from("mot_history")
         .select(
-          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit",
+          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data",
         )
         .eq("vehicle_id", id)
         .order("completed_at", { ascending: false })
@@ -177,6 +191,31 @@ export default async function VehiclePage({
                     {item.entry.odometer_value.toLocaleString()}{" "}
                     {item.entry.odometer_unit}
                   </p>
+                )}
+                {(item.entry.raw_data?.defects?.length ?? 0) > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-neutral-600">
+                      {item.entry.raw_data!.defects!.length} defect
+                      {item.entry.raw_data!.defects!.length === 1 ? "" : "s"}
+                    </summary>
+                    <ul className="mt-2 flex flex-col gap-1.5">
+                      {item.entry.raw_data!.defects!.map((defect, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span
+                            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase ${
+                              DEFECT_BADGE_CLASS[defect.type] ??
+                              DEFECT_BADGE_CLASS.ADVISORY
+                            }`}
+                          >
+                            {defect.type.toLowerCase()}
+                          </span>
+                          <span className="text-neutral-700">
+                            {defect.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 )}
               </li>
             ) : (
