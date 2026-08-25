@@ -54,21 +54,33 @@ export default function AddVehiclePage() {
     setStep("saving");
     setError(null);
 
-    const response = await fetch("/api/vehicles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ vrm }),
-    });
-    const body = await response.json();
+    try {
+      const response = await fetch("/api/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vrm }),
+      });
 
-    if (!response.ok) {
-      setError(body.error ?? "Failed to add vehicle");
+      let body: { error?: string } = {};
+      try {
+        body = await response.json();
+      } catch {
+        // Response wasn't JSON (e.g. a platform error page) — fall
+        // through to the generic error below rather than throwing.
+      }
+
+      if (!response.ok) {
+        setError(body.error ?? `Failed to add vehicle (${response.status})`);
+        setStep("preview");
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add vehicle");
       setStep("preview");
-      return;
     }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   const latestTest = vehicle?.motTests?.[0];
