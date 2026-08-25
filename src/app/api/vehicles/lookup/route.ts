@@ -31,14 +31,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     console.error(error);
-    // TODO: strip `detail` once the DVSA integration is confirmed working —
-    // it's only here to surface the real cause while we debug it live.
-    return NextResponse.json(
-      {
-        error: "Lookup failed",
-        detail: error instanceof Error ? error.message : String(error),
-      },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Lookup failed" }, { status: 502 });
   }
 }
