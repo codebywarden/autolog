@@ -24,7 +24,7 @@ export default function LookupTestPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setError(body.error ?? "Lookup failed");
+      setError(body.detail ?? body.error ?? "Lookup failed");
       return;
     }
 
