@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  computeMotStatus,
+  computeServiceStatus,
+  REMINDER_BADGE_CLASS,
+} from "@/lib/reminders";
 
 interface ServiceEntry {
   id: string;
@@ -125,6 +130,11 @@ export default async function VehiclePage({
     attachmentsByEntry.set(attachment.service_entry_id, list);
   }
 
+  const motStatus = computeMotStatus(motHistory?.[0] ?? null);
+  const serviceStatus = computeServiceStatus(
+    serviceEntries?.[0]?.entry_date ?? null,
+  );
+
   const timeline: TimelineItem[] = [
     ...(serviceEntries ?? []).map((entry) => ({
       kind: "service" as const,
@@ -154,6 +164,19 @@ export default async function VehiclePage({
             .filter(Boolean)
             .join(" · ")}
         </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <span
+          className={`rounded px-2.5 py-1 text-xs font-medium ${REMINDER_BADGE_CLASS[motStatus.level]}`}
+        >
+          {motStatus.message}
+        </span>
+        <span
+          className={`rounded px-2.5 py-1 text-xs font-medium ${REMINDER_BADGE_CLASS[serviceStatus.level]}`}
+        >
+          {serviceStatus.message}
+        </span>
       </div>
 
       <Link
