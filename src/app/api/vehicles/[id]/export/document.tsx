@@ -27,7 +27,13 @@ interface VehicleInfo {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 32, paddingBottom: 48, fontSize: 10, fontFamily: "Helvetica" },
+  page: {
+    paddingTop: 40,
+    paddingBottom: 56,
+    paddingHorizontal: 44,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+  },
   logo: { width: 150, height: 150, marginBottom: -20, marginLeft: -12 },
   title: { fontSize: 18, marginBottom: 4 },
   subtitle: { fontSize: 11, color: "#555555", marginBottom: 20 },
@@ -39,16 +45,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   date: { width: 70, color: "#555555" },
-  rowBody: { flexDirection: "column", flexGrow: 1 },
+  // flexBasis: 0 alongside flexGrow is the part that actually matters
+  // here — without it, Yoga sizes this column to its content instead
+  // of the space the row has for it, so long unbroken text (a note, a
+  // defect description) overflows past the page's right padding
+  // instead of wrapping.
+  rowBody: { flexDirection: "column", flexGrow: 1, flexBasis: 0 },
   label: { fontFamily: "Helvetica-Bold" },
   meta: { color: "#555555", marginTop: 2 },
   pass: { color: "#15803d" },
   fail: { color: "#b91c1c" },
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 32,
-    right: 32,
+    bottom: 24,
+    left: 44,
+    right: 44,
     fontSize: 8,
     color: "#999999",
     textAlign: "center",
