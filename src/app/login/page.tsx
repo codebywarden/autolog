@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buttonStyles } from "@/components/ui/styles";
+import { Field, TextInput } from "@/components/ui/field";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,9 +35,10 @@ export default function LoginPage() {
   if (status === "sent") {
     return (
       <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-3 p-6">
-        <h1 className="text-xl font-semibold">Check your email</h1>
-        <p className="text-sm text-neutral-600">
-          We sent a sign-in link to {email}. Open it on this device to continue.
+        <h1 className="text-xl font-bold text-foreground">Check your email</h1>
+        <p className="text-sm text-muted-foreground">
+          We sent a sign-in link to <strong className="text-foreground">{email}</strong>.
+          Open it on this device to continue.
         </p>
       </main>
     );
@@ -43,24 +46,25 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
-      <h1 className="text-xl font-semibold">Sign in to AutoLog</h1>
+      <h1 className="text-xl font-bold text-foreground">Sign in to AutoLog</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="email"
-          required
-          placeholder="you@example.com"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="rounded border border-neutral-300 px-3 py-2 text-sm"
-        />
+        <Field label="Email">
+          <TextInput
+            type="email"
+            required
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </Field>
         <button
           type="submit"
           disabled={status === "sending"}
-          className="rounded bg-black px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className={buttonStyles("primary")}
         >
           {status === "sending" ? "Sending…" : "Send magic link"}
         </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-critical">{error}</p>}
       </form>
     </main>
   );

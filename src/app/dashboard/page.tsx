@@ -7,6 +7,7 @@ import {
   computeServiceStatus,
   REMINDER_BADGE_CLASS,
 } from "@/lib/reminders";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
 interface OwnedVehicleRow {
   vehicle: {
@@ -89,38 +90,43 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-5 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Your vehicles</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Your vehicles
+        </h1>
         <SignOutButton />
       </div>
-      <p className="text-sm text-neutral-600">Signed in as {user.email}</p>
+      <p className="-mt-3 text-sm text-muted-foreground">
+        Signed in as {user.email}
+      </p>
 
-      <div className="flex gap-2">
-        <Link
-          href="/dashboard/vehicles/add"
-          className="flex-1 rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
-        >
-          Add a vehicle
-        </Link>
-        <Link
-          href="/dashboard/garage"
-          className="flex-1 rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
-        >
-          Garage portal
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard/vehicles/add"
+            className={buttonStyles("primary", "flex-1")}
+          >
+            Add a vehicle
+          </Link>
+          <Link
+            href="/dashboard/garage"
+            className={buttonStyles("secondary", "flex-1")}
+          >
+            Garage portal
+          </Link>
+        </div>
+        <Link href="/dashboard/vehicles/receive" className={buttonStyles("ghost")}>
+          Receive a vehicle
         </Link>
       </div>
-      <Link
-        href="/dashboard/vehicles/receive"
-        className="rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
-      >
-        Receive a vehicle
-      </Link>
 
       {vehicles.length === 0 ? (
-        <p className="text-sm text-neutral-600">No vehicles yet.</p>
+        <p className={cardStyles("text-sm text-muted-foreground")}>
+          No vehicles yet.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {vehicles.map((vehicle) => {
             const motStatus = computeMotStatus(
               latestMotByVehicle.get(vehicle.id) ?? null,
@@ -133,22 +139,26 @@ export default async function DashboardPage() {
               <li key={vehicle.id}>
                 <Link
                   href={`/dashboard/vehicles/${vehicle.id}`}
-                  className="block rounded border border-neutral-300 p-3 text-sm hover:border-neutral-400"
+                  className={cardStyles(
+                    "block text-sm transition-colors hover:border-border-strong",
+                  )}
                 >
-                  <p className="font-semibold">{vehicle.vrm}</p>
-                  <p className="text-neutral-600">
+                  <p className="font-mono text-base font-semibold tracking-wide text-foreground">
+                    {vehicle.vrm}
+                  </p>
+                  <p className="text-muted-foreground">
                     {[vehicle.make, vehicle.model, vehicle.colour]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${REMINDER_BADGE_CLASS[motStatus.level]}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${REMINDER_BADGE_CLASS[motStatus.level]}`}
                     >
                       {motStatus.message}
                     </span>
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${REMINDER_BADGE_CLASS[serviceStatus.level]}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${REMINDER_BADGE_CLASS[serviceStatus.level]}`}
                     >
                       {serviceStatus.message}
                     </span>

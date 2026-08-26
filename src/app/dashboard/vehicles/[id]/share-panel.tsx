@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
 // URL-safe, high-entropy — unlike the garage invite code, anyone
 // holding this string gets access with no account or code-entry step,
@@ -78,9 +79,9 @@ export function SharePanel({ vehicleId }: { vehicleId: string }) {
   }
 
   return (
-    <div className="rounded border border-neutral-300 p-3 text-sm">
-      <p className="font-semibold">Share history</p>
-      <p className="mt-1 text-neutral-600">
+    <div className={cardStyles("text-sm")}>
+      <p className="font-semibold text-foreground">Share history</p>
+      <p className="mt-1 text-muted-foreground">
         Generate a read-only link to send to a buyer or dealer — no
         AutoLog account needed to view it. Invoice attachments aren&apos;t
         included. Links expire after 14 days.
@@ -88,24 +89,24 @@ export function SharePanel({ vehicleId }: { vehicleId: string }) {
       <button
         onClick={handleGenerate}
         disabled={saving}
-        className="mt-3 rounded border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+        className={buttonStyles("secondary", "mt-3")}
       >
         {saving ? "Generating…" : "Generate share link"}
       </button>
       {url && (
         <div className="mt-2 flex items-center gap-2 overflow-x-auto">
-          <code className="whitespace-nowrap rounded bg-neutral-100 px-2 py-1 font-mono text-xs">
+          <code className="whitespace-nowrap rounded-lg bg-primary-tint px-2 py-1 font-mono text-xs text-primary">
             {url}
           </code>
           <button
             onClick={handleCopy}
-            className="shrink-0 text-blue-700 underline"
+            className="shrink-0 text-primary underline underline-offset-2"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
       )}
-      {error && <p className="mt-2 text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-critical">{error}</p>}
     </div>
   );
 }

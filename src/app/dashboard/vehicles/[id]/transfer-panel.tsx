@@ -75,9 +75,9 @@ export function TransferPanel({ vehicleId }: { vehicleId: string }) {
   }
 
   return (
-    <div className="rounded border border-red-300 bg-red-50 p-3 text-sm">
-      <p className="font-semibold text-red-900">Transfer ownership</p>
-      <p className="mt-1 text-red-800">
+    <div className="rounded-xl border border-critical/25 bg-critical-bg p-4 text-sm">
+      <p className="font-semibold text-critical">Transfer ownership</p>
+      <p className="mt-1 text-critical/90">
         Generate a code for the new owner to redeem. The moment they
         redeem it, you lose all access to this vehicle — this can&apos;t
         be undone. Codes expire after 7 days and work once.
@@ -85,19 +85,21 @@ export function TransferPanel({ vehicleId }: { vehicleId: string }) {
       <button
         onClick={handleGenerate}
         disabled={saving}
-        className="mt-3 rounded border border-red-400 px-3 py-1.5 text-sm font-medium text-red-900 disabled:opacity-50"
+        className="mt-3 rounded-lg border border-critical/40 px-3 py-1.5 text-sm font-semibold text-critical transition-colors hover:border-critical/60 disabled:opacity-50"
       >
         {saving ? "Generating…" : "Generate transfer code"}
       </button>
       {code && (
         <div className="mt-2 flex items-center gap-2">
-          <code className="rounded bg-white px-2 py-1 font-mono">{code}</code>
-          <button onClick={handleCopy} className="text-blue-700 underline">
+          <code className="rounded-lg bg-surface px-2 py-1 font-mono text-foreground">
+            {code}
+          </code>
+          <button onClick={handleCopy} className="text-primary underline underline-offset-2">
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
       )}
-      {error && <p className="mt-2 text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-critical">{error}</p>}
     </div>
   );
 }

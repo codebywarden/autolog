@@ -6,10 +6,10 @@ export interface ReminderStatus {
 }
 
 export const REMINDER_BADGE_CLASS: Record<ReminderLevel, string> = {
-  critical: "bg-red-700 text-white",
-  warning: "bg-amber-500 text-black",
-  ok: "bg-green-700 text-white",
-  unknown: "bg-neutral-200 text-neutral-600",
+  critical: "bg-critical-bg text-critical",
+  warning: "bg-warning-bg text-warning",
+  ok: "bg-success-bg text-success",
+  unknown: "bg-neutral-badge-bg text-neutral-badge",
 };
 
 const DUE_SOON_DAYS = 30;

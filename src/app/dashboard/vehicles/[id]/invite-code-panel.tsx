@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
 // No 0/O/1/I — these codes are read off a screen and typed in by hand
 // at a garage counter, so ambiguous characters cause real support pain.
@@ -76,9 +77,9 @@ export function InviteCodePanel({ vehicleId }: { vehicleId: string }) {
   }
 
   return (
-    <div className="rounded border border-neutral-300 p-3 text-sm">
-      <p className="font-semibold">Garage access</p>
-      <p className="mt-1 text-neutral-600">
+    <div className={cardStyles("text-sm")}>
+      <p className="font-semibold text-foreground">Garage access</p>
+      <p className="mt-1 text-muted-foreground">
         Generate a code and give it to a garage to let them view this
         vehicle and add verified entries. Codes expire after 7 days and
         work once.
@@ -86,21 +87,21 @@ export function InviteCodePanel({ vehicleId }: { vehicleId: string }) {
       <button
         onClick={handleGenerate}
         disabled={saving}
-        className="mt-3 rounded border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+        className={buttonStyles("secondary", "mt-3")}
       >
         {saving ? "Generating…" : "Generate invite code"}
       </button>
       {code && (
         <div className="mt-2 flex items-center gap-2">
-          <code className="rounded bg-neutral-100 px-2 py-1 font-mono">
+          <code className="rounded-lg bg-primary-tint px-2 py-1 font-mono text-primary">
             {code}
           </code>
-          <button onClick={handleCopy} className="text-blue-700 underline">
+          <button onClick={handleCopy} className="text-primary underline underline-offset-2">
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
       )}
-      {error && <p className="mt-2 text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-critical">{error}</p>}
     </div>
   );
 }

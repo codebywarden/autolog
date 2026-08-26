@@ -46,30 +46,30 @@ export function TransferCodeList({ codes }: { codes: TransferCode[] }) {
 
   return (
     <div className="text-sm">
-      <p className="text-neutral-600">Pending transfer codes:</p>
-      <ul className="mt-1 flex flex-col gap-1">
+      <p className="text-muted-foreground">Pending transfer codes:</p>
+      <ul className="mt-1 flex flex-col gap-1.5">
         {codes.map((transferCode) => (
           <li
             key={transferCode.id}
-            className="flex items-center justify-between gap-2 rounded border border-neutral-300 px-2.5 py-1.5"
+            className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2"
           >
             <span>
-              <code className="font-mono">{transferCode.code}</code>{" "}
-              <span className="text-neutral-500">
+              <code className="font-mono text-foreground">{transferCode.code}</code>{" "}
+              <span className="text-muted-foreground">
                 expires {transferCode.expiresAt.slice(0, 10)}
               </span>
             </span>
             <button
               onClick={() => handleCancel(transferCode.id)}
               disabled={cancellingId === transferCode.id}
-              className="text-red-700 underline disabled:opacity-50"
+              className="text-critical underline underline-offset-2 disabled:opacity-50"
             >
               {cancellingId === transferCode.id ? "Cancelling…" : "Cancel"}
             </button>
           </li>
         ))}
       </ul>
-      {error && <p className="mt-1 text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-critical">{error}</p>}
     </div>
   );
 }

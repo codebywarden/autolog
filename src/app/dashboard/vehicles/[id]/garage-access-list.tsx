@@ -43,25 +43,25 @@ export function GarageAccessList({ grants }: { grants: GarageAccessGrant[] }) {
 
   return (
     <div className="text-sm">
-      <p className="text-neutral-600">Garages with access:</p>
-      <ul className="mt-1 flex flex-col gap-1">
+      <p className="text-muted-foreground">Garages with access:</p>
+      <ul className="mt-1 flex flex-col gap-1.5">
         {grants.map((grant) => (
           <li
             key={grant.id}
-            className="flex items-center justify-between gap-2 rounded border border-neutral-300 px-2.5 py-1.5"
+            className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2"
           >
-            <span>{grant.garageName}</span>
+            <span className="text-foreground">{grant.garageName}</span>
             <button
               onClick={() => handleRevoke(grant.id, grant.garageName)}
               disabled={revokingId === grant.id}
-              className="text-red-700 underline disabled:opacity-50"
+              className="text-critical underline underline-offset-2 disabled:opacity-50"
             >
               {revokingId === grant.id ? "Revoking…" : "Revoke"}
             </button>
           </li>
         ))}
       </ul>
-      {error && <p className="mt-1 text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-critical">{error}</p>}
     </div>
   );
 }

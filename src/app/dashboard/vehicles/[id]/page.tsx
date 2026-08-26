@@ -11,6 +11,7 @@ import {
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 import { InviteCodePanel } from "./invite-code-panel";
 import { GarageAccessList } from "./garage-access-list";
 import { SharePanel } from "./share-panel";
@@ -30,10 +31,10 @@ interface ShareLinkRow {
 }
 
 const DEFECT_BADGE_CLASS: Record<string, string> = {
-  DANGEROUS: "bg-red-700 text-white",
-  MAJOR: "bg-orange-600 text-white",
-  MINOR: "bg-yellow-500 text-black",
-  ADVISORY: "bg-neutral-200 text-neutral-700",
+  DANGEROUS: "bg-critical-bg text-critical",
+  MAJOR: "bg-critical-bg text-critical",
+  MINOR: "bg-warning-bg text-warning",
+  ADVISORY: "bg-neutral-badge-bg text-neutral-badge",
 };
 
 interface Attachment {
@@ -209,14 +210,19 @@ export default async function VehiclePage({
     .returns<ActivityLogRow[]>();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
-      <Link href="/dashboard" className="text-sm text-neutral-500">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-5 p-6">
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
         ← Your vehicles
       </Link>
 
       <div>
-        <h1 className="text-xl font-semibold">{vehicle.vrm}</h1>
-        <p className="text-neutral-600">
+        <h1 className="font-mono text-2xl font-semibold tracking-wide text-foreground">
+          {vehicle.vrm}
+        </h1>
+        <p className="text-muted-foreground">
           {[vehicle.make, vehicle.model, vehicle.colour, vehicle.fuel_type]
             .filter(Boolean)
             .join(" · ")}
@@ -225,69 +231,61 @@ export default async function VehiclePage({
 
       <div className="flex flex-wrap gap-2">
         <span
-          className={`rounded px-2.5 py-1 text-xs font-medium ${REMINDER_BADGE_CLASS[motStatus.level]}`}
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${REMINDER_BADGE_CLASS[motStatus.level]}`}
         >
           {motStatus.message}
         </span>
         <span
-          className={`rounded px-2.5 py-1 text-xs font-medium ${REMINDER_BADGE_CLASS[serviceStatus.level]}`}
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${REMINDER_BADGE_CLASS[serviceStatus.level]}`}
         >
           {serviceStatus.message}
         </span>
       </div>
 
-      <InviteCodePanel vehicleId={id} />
-      <GarageAccessList grants={garageAccessGrants} />
-      <SharePanel vehicleId={id} />
-      <ShareLinkList links={shareLinks} />
-
       <div className="flex gap-2">
         <Link
           href={`/dashboard/vehicles/${id}/add-entry`}
-          className="flex-1 rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
+          className={buttonStyles("primary", "flex-1")}
         >
           Add service entry
         </Link>
         <a
           href={`/api/vehicles/${id}/export`}
-          className="flex-1 rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
+          className={buttonStyles("secondary", "flex-1")}
         >
           Export PDF
         </a>
       </div>
 
       {timeline.length === 0 ? (
-        <p className="text-sm text-neutral-600">No history yet.</p>
+        <p className={cardStyles("text-sm text-muted-foreground")}>
+          No history yet.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {timeline.map((item) =>
             item.kind === "mot" ? (
-              <li
-                key={`mot-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
-              >
+              <li key={`mot-${item.entry.id}`} className={cardStyles("text-sm")}>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">MOT test</span>
+                  <span className="font-semibold text-foreground">MOT test</span>
                   <span
-                    className={
-                      item.entry.result === "PASS"
-                        ? "text-green-700"
-                        : "text-red-700"
-                    }
+                    className={`text-xs font-semibold ${
+                      item.entry.result === "PASS" ? "text-success" : "text-critical"
+                    }`}
                   >
                     {item.entry.result === "PASS" ? "Pass" : "Fail"}
                   </span>
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.odometer_value != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.odometer_value.toLocaleString()}{" "}
                     {item.entry.odometer_unit}
                   </p>
                 )}
                 {(item.entry.raw_data?.defects?.length ?? 0) > 0 && (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-neutral-600">
+                    <summary className="cursor-pointer text-muted-foreground">
                       {item.entry.raw_data!.defects!.length} defect
                       {item.entry.raw_data!.defects!.length === 1 ? "" : "s"}
                     </summary>
@@ -295,14 +293,14 @@ export default async function VehiclePage({
                       {item.entry.raw_data!.defects!.map((defect, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <span
-                            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase ${
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
                               DEFECT_BADGE_CLASS[defect.type] ??
                               DEFECT_BADGE_CLASS.ADVISORY
                             }`}
                           >
                             {defect.type.toLowerCase()}
                           </span>
-                          <span className="text-neutral-700">
+                          <span className="text-muted-foreground">
                             {defect.text}
                           </span>
                         </li>
@@ -314,27 +312,29 @@ export default async function VehiclePage({
             ) : (
               <li
                 key={`service-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
+                className={cardStyles("text-sm")}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold capitalize">
+                  <span className="font-semibold capitalize text-foreground">
                     {item.entry.service_type}
                   </span>
                   {item.entry.verified && (
-                    <span className="text-xs uppercase text-green-700">
+                    <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold uppercase text-success">
                       Verified
                     </span>
                   )}
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.mileage != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.mileage.toLocaleString()} mi
                   </p>
                 )}
-                {item.entry.garage_name && <p>{item.entry.garage_name}</p>}
+                {item.entry.garage_name && (
+                  <p className="text-foreground">{item.entry.garage_name}</p>
+                )}
                 {item.entry.notes && (
-                  <p className="text-neutral-600">{item.entry.notes}</p>
+                  <p className="text-muted-foreground">{item.entry.notes}</p>
                 )}
                 {(attachmentsByEntry.get(item.entry.id) ?? []).map(
                   (attachment) =>
@@ -344,12 +344,12 @@ export default async function VehiclePage({
                         href={attachment.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-block text-blue-700 underline"
+                        className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary-hover"
                       >
                         📎 {attachment.fileName}
                       </a>
                     ) : (
-                      <p key={attachment.id} className="mt-1 text-neutral-500">
+                      <p key={attachment.id} className="mt-1 text-muted-foreground">
                         📎 {attachment.fileName} (link unavailable)
                       </p>
                     ),
@@ -361,14 +361,14 @@ export default async function VehiclePage({
       )}
 
       {activityLog && activityLog.length > 0 && (
-        <details className="rounded border border-neutral-300 p-3 text-sm">
-          <summary className="cursor-pointer font-semibold">
+        <details className={cardStyles("text-sm")}>
+          <summary className="cursor-pointer font-semibold text-foreground">
             Activity log
           </summary>
           <ul className="mt-2 flex flex-col gap-1.5">
             {activityLog.map((row) => (
-              <li key={row.id} className="text-neutral-600">
-                <span className="font-mono text-xs text-neutral-500">
+              <li key={row.id} className="text-muted-foreground">
+                <span className="font-mono text-xs text-muted-foreground/80">
                   {row.created_at.slice(0, 10)}
                 </span>{" "}
                 {describeActivity(row)}
@@ -378,8 +378,20 @@ export default async function VehiclePage({
         </details>
       )}
 
-      <TransferPanel vehicleId={id} />
-      <TransferCodeList codes={transferCodes} />
+      <div className="mt-4 flex flex-col gap-3 border-t border-border pt-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Access &amp; sharing
+        </p>
+        <InviteCodePanel vehicleId={id} />
+        <GarageAccessList grants={garageAccessGrants} />
+        <SharePanel vehicleId={id} />
+        <ShareLinkList links={shareLinks} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <TransferPanel vehicleId={id} />
+        <TransferCodeList codes={transferCodes} />
+      </div>
     </main>
   );
 }
