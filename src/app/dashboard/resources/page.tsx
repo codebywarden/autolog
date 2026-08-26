@@ -239,15 +239,29 @@ export default async function ResourcesPage() {
         </div>
 
         {COLOUR_BANDS.map((band) => (
-          <details key={band.title} open className="flex flex-col gap-2.5">
+          <details key={band.title} className="group flex flex-col gap-2.5">
             <summary className="cursor-pointer list-none">
               <div
-                className={`rounded-lg border ${TONE_BORDER[band.defaultTone]} ${TONE_BG[band.defaultTone]} px-3 py-2`}
+                className={`flex items-start justify-between gap-2 rounded-lg border ${TONE_BORDER[band.defaultTone]} ${TONE_BG[band.defaultTone]} px-3 py-2`}
               >
-                <p className={`text-sm font-semibold ${TONE_TEXT[band.defaultTone]}`}>
-                  {band.title} · {band.lights.length}
-                </p>
-                <p className="text-sm text-muted-foreground">{band.meaning}</p>
+                <div>
+                  <p className={`text-sm font-semibold ${TONE_TEXT[band.defaultTone]}`}>
+                    {band.title} · {band.lights.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{band.meaning}</p>
+                </div>
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`h-4 w-4 shrink-0 transition-transform group-open:rotate-180 ${TONE_TEXT[band.defaultTone]}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
               </div>
             </summary>
             <ul className="mt-2.5 flex flex-col gap-2">

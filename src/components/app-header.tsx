@@ -16,7 +16,6 @@ const MY_VEHICLES_CHILDREN = [
 ];
 
 const NAV_LINKS = [
-  { href: "/dashboard/insights", label: "My Dashboard" },
   { href: "/dashboard/garage", label: "Garage portal" },
   { href: "/dashboard/resources", label: "Resources" },
 ];
@@ -37,7 +36,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-20 border-b border-border bg-surface">
       <div className="relative mx-auto flex max-w-2xl items-center justify-end px-4 py-4">
         <Link
-          href="/dashboard"
+          href="/dashboard/insights"
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           onClick={() => setOpen(false)}
         >
@@ -87,6 +86,20 @@ export function AppHeader() {
             className="fixed inset-0 z-10 bg-foreground/10"
           />
           <nav className="absolute right-4 top-full z-20 mt-2 w-60 rounded-xl border border-border bg-surface p-1.5 shadow-md">
+            <ul className="flex flex-col">
+              <li>
+                <Link
+                  href="/dashboard/insights"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-sm font-semibold text-foreground hover:bg-background"
+                >
+                  My Dashboard
+                </Link>
+              </li>
+            </ul>
+
+            <div className="my-1 border-t border-border" />
+
             <ul className="flex flex-col">
               <li>
                 <Link
