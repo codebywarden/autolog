@@ -16,6 +16,7 @@ const MY_VEHICLES_CHILDREN = [
 ];
 
 const NAV_LINKS = [
+  { href: "/dashboard/insights", label: "My Dashboard" },
   { href: "/dashboard/garage", label: "Garage portal" },
   { href: "/dashboard/resources", label: "Resources" },
 ];
