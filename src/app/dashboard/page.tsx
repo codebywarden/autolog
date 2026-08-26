@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "./sign-out-button";
 import {
   computeMotStatus,
   computeServiceStatus,
@@ -91,12 +90,9 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-5 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Your vehicles
-        </h1>
-        <SignOutButton />
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        Your vehicles
+      </h1>
       <p className="-mt-3 text-sm text-muted-foreground">
         Signed in as {user.email}
       </p>
