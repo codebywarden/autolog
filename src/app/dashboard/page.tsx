@@ -91,7 +91,7 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-5 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
-        Your vehicles
+        My vehicles
       </h1>
       <p className="-mt-3 text-sm text-muted-foreground">
         Signed in as {user.email}

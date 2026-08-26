@@ -46,7 +46,7 @@ export default async function GaragePortalPage() {
           href="/dashboard"
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Your vehicles
+          ← My vehicles
         </Link>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Set up your garage
@@ -77,7 +77,7 @@ export default async function GaragePortalPage() {
         href="/dashboard"
         className="text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        ← Your vehicles
+        ← My vehicles
       </Link>
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">

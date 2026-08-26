@@ -257,7 +257,7 @@ export default async function VehiclePage({
         href="/dashboard"
         className="text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        ← Your vehicles
+        ← My vehicles
       </Link>
 
       <div>

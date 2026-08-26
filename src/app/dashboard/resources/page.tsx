@@ -200,7 +200,7 @@ export default async function ResourcesPage() {
         href="/dashboard"
         className="text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        ← Your vehicles
+        ← My vehicles
       </Link>
 
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
