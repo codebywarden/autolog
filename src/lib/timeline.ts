@@ -6,6 +6,8 @@ export interface ServiceEntry {
   garage_name: string | null;
   notes: string | null;
   verified: boolean;
+  resolved_mot_history_id?: string | null;
+  resolved_defect_index?: number | null;
 }
 
 export interface MotDefect {
@@ -52,4 +54,36 @@ export function buildTimeline(
       entry,
     })),
   ].sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+export interface ResolvableDefect {
+  motHistoryId: string;
+  defectIndex: number;
+  label: string;
+}
+
+/**
+ * Flattens every defect across a vehicle's MOT history into a pickable
+ * list for the "this entry resolves..." selector, skipping any defect
+ * a service entry already points at — a defect can only be resolved
+ * once, so re-offering it would just invite duplicate links.
+ */
+export function buildResolvableDefects(
+  motHistory: MotHistoryRow[],
+  alreadyResolved: Set<string>,
+): ResolvableDefect[] {
+  const items: ResolvableDefect[] = [];
+  for (const test of motHistory) {
+    const defects = test.raw_data?.defects ?? [];
+    defects.forEach((defect, index) => {
+      const key = `${test.id}:${index}`;
+      if (alreadyResolved.has(key)) return;
+      items.push({
+        motHistoryId: test.id,
+        defectIndex: index,
+        label: `${test.test_date} — ${defect.text}`,
+      });
+    });
+  }
+  return items;
 }

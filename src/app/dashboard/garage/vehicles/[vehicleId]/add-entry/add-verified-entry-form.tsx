@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { buttonStyles } from "@/components/ui/styles";
 import { Field, TextInput, Select, Textarea } from "@/components/ui/field";
+import type { ResolvableDefect } from "@/lib/timeline";
 
 const SERVICE_TYPES = [
   "service",
@@ -16,12 +17,28 @@ const SERVICE_TYPES = [
   "other",
 ] as const;
 
+const ATTACHMENT_TYPES = [
+  "invoice",
+  "receipt",
+  "mot_certificate",
+  "other",
+] as const;
+
+const ATTACHMENT_TYPE_LABELS: Record<(typeof ATTACHMENT_TYPES)[number], string> = {
+  invoice: "Invoice",
+  receipt: "Receipt",
+  mot_certificate: "MOT certificate",
+  other: "Other",
+};
+
 export function AddVerifiedEntryForm({
   vehicleId,
   garageId,
+  resolvableDefects,
 }: {
   vehicleId: string;
   garageId: string;
+  resolvableDefects: ResolvableDefect[];
 }) {
   const router = useRouter();
   const [entryDate, setEntryDate] = useState(() =>
@@ -31,7 +48,10 @@ export function AddVerifiedEntryForm({
   const [serviceType, setServiceType] =
     useState<(typeof SERVICE_TYPES)[number]>("service");
   const [notes, setNotes] = useState("");
+  const [resolvesKey, setResolvesKey] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [attachmentType, setAttachmentType] =
+    useState<(typeof ATTACHMENT_TYPES)[number]>("invoice");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +72,10 @@ export function AddVerifiedEntryForm({
         return;
       }
 
+      const [resolvedMotHistoryId, resolvedDefectIndex] = resolvesKey
+        ? resolvesKey.split(":")
+        : [null, null];
+
       const { data: entry, error: insertError } = await supabase
         .from("service_entries")
         .insert({
@@ -63,6 +87,9 @@ export function AddVerifiedEntryForm({
           mileage: mileage ? Number(mileage) : null,
           service_type: serviceType,
           notes: notes || null,
+          resolved_mot_history_id: resolvedMotHistoryId,
+          resolved_defect_index:
+            resolvedDefectIndex != null ? Number(resolvedDefectIndex) : null,
         })
         .select("id")
         .single();
@@ -96,6 +123,7 @@ export function AddVerifiedEntryForm({
             storage_path: path,
             file_name: file.name,
             mime_type: file.type,
+            attachment_type: attachmentType,
           });
 
         if (attachmentError) {
@@ -166,6 +194,25 @@ export function AddVerifiedEntryForm({
           />
         </Field>
 
+        {resolvableDefects.length > 0 && (
+          <Field label="Resolves a previous MOT advisory (optional)">
+            <Select
+              value={resolvesKey}
+              onChange={(event) => setResolvesKey(event.target.value)}
+            >
+              <option value="">— not related to a specific advisory —</option>
+              {resolvableDefects.map((defect) => (
+                <option
+                  key={`${defect.motHistoryId}:${defect.defectIndex}`}
+                  value={`${defect.motHistoryId}:${defect.defectIndex}`}
+                >
+                  {defect.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
+
         <Field label="Invoice (photo or PDF, optional)">
           <input
             type="file"
@@ -174,6 +221,25 @@ export function AddVerifiedEntryForm({
             className="text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
           />
         </Field>
+
+        {file && (
+          <Field label="Attachment type">
+            <Select
+              value={attachmentType}
+              onChange={(event) =>
+                setAttachmentType(
+                  event.target.value as (typeof ATTACHMENT_TYPES)[number],
+                )
+              }
+            >
+              {ATTACHMENT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {ATTACHMENT_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
 
         <button type="submit" disabled={saving} className={buttonStyles("primary")}>
           {saving ? "Saving…" : "Save verified entry"}

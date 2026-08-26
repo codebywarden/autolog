@@ -8,17 +8,33 @@ import {
 } from "@/lib/timeline";
 import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
+const DEFECT_BADGE_CLASS: Record<string, string> = {
+  DANGEROUS: "bg-critical-bg text-critical",
+  MAJOR: "bg-critical-bg text-critical",
+  MINOR: "bg-warning-bg text-warning",
+  ADVISORY: "bg-neutral-badge-bg text-neutral-badge",
+};
+
+const ATTACHMENT_TYPE_LABELS: Record<string, string> = {
+  invoice: "Invoice",
+  receipt: "Receipt",
+  mot_certificate: "MOT certificate",
+  other: "Attachment",
+};
+
 interface Attachment {
   id: string;
   service_entry_id: string | null;
   storage_path: string;
   file_name: string | null;
+  attachment_type: string;
 }
 
 interface AttachmentLink {
   id: string;
   fileName: string;
   url: string | null;
+  attachmentType: string;
 }
 
 const SIGNED_URL_TTL_SECONDS = 600;
@@ -53,7 +69,7 @@ export default async function GarageVehiclePage({
       supabase
         .from("service_entries")
         .select(
-          "id, entry_date, mileage, service_type, garage_name, notes, verified",
+          "id, entry_date, mileage, service_type, garage_name, notes, verified, resolved_mot_history_id, resolved_defect_index",
         )
         .eq("vehicle_id", vehicleId)
         .order("entry_date", { ascending: false })
@@ -68,7 +84,7 @@ export default async function GarageVehiclePage({
         .returns<MotHistoryRow[]>(),
       supabase
         .from("file_attachments")
-        .select("id, service_entry_id, storage_path, file_name")
+        .select("id, service_entry_id, storage_path, file_name, attachment_type")
         .eq("vehicle_id", vehicleId)
         .returns<Attachment[]>(),
     ]);
@@ -86,11 +102,28 @@ export default async function GarageVehiclePage({
       id: attachment.id,
       fileName: attachment.file_name ?? "Attachment",
       url: signed?.signedUrl ?? null,
+      attachmentType: attachment.attachment_type,
     });
     attachmentsByEntry.set(attachment.service_entry_id, list);
   }
 
   const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
+
+  const resolvedDefectKeys = new Set(
+    (serviceEntries ?? [])
+      .filter((entry) => entry.resolved_mot_history_id != null)
+      .map((entry) => `${entry.resolved_mot_history_id}:${entry.resolved_defect_index}`),
+  );
+
+  const motHistoryById = new Map((motHistory ?? []).map((row) => [row.id, row]));
+  function describeResolvedDefect(entry: ServiceEntry): string | null {
+    if (entry.resolved_mot_history_id == null || entry.resolved_defect_index == null) {
+      return null;
+    }
+    const test = motHistoryById.get(entry.resolved_mot_history_id);
+    const defect = test?.raw_data?.defects?.[entry.resolved_defect_index];
+    return defect ? `Resolves: ${defect.text}` : null;
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
@@ -145,6 +178,47 @@ export default async function GarageVehiclePage({
                     {item.entry.odometer_unit}
                   </p>
                 )}
+                {(item.entry.raw_data?.defects?.length ?? 0) > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-muted-foreground">
+                      {item.entry.raw_data!.defects!.length} defect
+                      {item.entry.raw_data!.defects!.length === 1 ? "" : "s"}
+                    </summary>
+                    <ul className="mt-2 flex flex-col gap-1.5">
+                      {item.entry.raw_data!.defects!.map((defect, index) => {
+                        const resolved = resolvedDefectKeys.has(
+                          `${item.entry.id}:${index}`,
+                        );
+                        return (
+                          <li key={index} className="flex items-start gap-2">
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
+                                DEFECT_BADGE_CLASS[defect.type] ??
+                                DEFECT_BADGE_CLASS.ADVISORY
+                              }`}
+                            >
+                              {defect.type.toLowerCase()}
+                            </span>
+                            <span
+                              className={
+                                resolved
+                                  ? "text-muted-foreground line-through"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {defect.text}
+                            </span>
+                            {resolved && (
+                              <span className="shrink-0 text-xs font-medium text-success">
+                                Resolved
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                )}
               </li>
             ) : (
               <li
@@ -173,6 +247,9 @@ export default async function GarageVehiclePage({
                 {item.entry.notes && (
                   <p className="text-muted-foreground">{item.entry.notes}</p>
                 )}
+                {describeResolvedDefect(item.entry) && (
+                  <p className="text-success">{describeResolvedDefect(item.entry)}</p>
+                )}
                 {(attachmentsByEntry.get(item.entry.id) ?? []).map(
                   (attachment) =>
                     attachment.url ? (
@@ -183,11 +260,11 @@ export default async function GarageVehiclePage({
                         rel="noopener noreferrer"
                         className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary-hover"
                       >
-                        📎 {attachment.fileName}
+                        📎 {ATTACHMENT_TYPE_LABELS[attachment.attachmentType] ?? "Attachment"}: {attachment.fileName}
                       </a>
                     ) : (
                       <p key={attachment.id} className="mt-1 text-muted-foreground">
-                        📎 {attachment.fileName} (link unavailable)
+                        📎 {ATTACHMENT_TYPE_LABELS[attachment.attachmentType] ?? "Attachment"}: {attachment.fileName} (link unavailable)
                       </p>
                     ),
                 )}

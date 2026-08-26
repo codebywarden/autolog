@@ -11,7 +11,15 @@ import {
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
+import { computeMileageStats, type MileageReading } from "@/lib/mileage";
 import { buttonStyles, cardStyles } from "@/components/ui/styles";
+
+const ATTACHMENT_TYPE_LABELS: Record<string, string> = {
+  invoice: "Invoice",
+  receipt: "Receipt",
+  mot_certificate: "MOT certificate",
+  other: "Attachment",
+};
 import { InviteCodePanel } from "./invite-code-panel";
 import { GarageAccessList } from "./garage-access-list";
 import { SharePanel } from "./share-panel";
@@ -42,12 +50,14 @@ interface Attachment {
   service_entry_id: string | null;
   storage_path: string;
   file_name: string | null;
+  attachment_type: string;
 }
 
 interface AttachmentLink {
   id: string;
   fileName: string;
   url: string | null;
+  attachmentType: string;
 }
 
 interface ActivityLogRow {
@@ -115,7 +125,7 @@ export default async function VehiclePage({
       supabase
         .from("service_entries")
         .select(
-          "id, entry_date, mileage, service_type, garage_name, notes, verified",
+          "id, entry_date, mileage, service_type, garage_name, notes, verified, resolved_mot_history_id, resolved_defect_index",
         )
         .eq("vehicle_id", id)
         .order("entry_date", { ascending: false })
@@ -130,7 +140,7 @@ export default async function VehiclePage({
         .returns<MotHistoryRow[]>(),
       supabase
         .from("file_attachments")
-        .select("id, service_entry_id, storage_path, file_name")
+        .select("id, service_entry_id, storage_path, file_name, attachment_type")
         .eq("vehicle_id", id)
         .returns<Attachment[]>(),
     ]);
@@ -151,6 +161,7 @@ export default async function VehiclePage({
       id: attachment.id,
       fileName: attachment.file_name ?? "Attachment",
       url: signed?.signedUrl ?? null,
+      attachmentType: attachment.attachment_type,
     });
     attachmentsByEntry.set(attachment.service_entry_id, list);
   }
@@ -161,6 +172,37 @@ export default async function VehiclePage({
   );
 
   const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
+
+  const mileageReadings: MileageReading[] = [
+    ...(motHistory ?? [])
+      .filter((row) => row.odometer_value != null)
+      .map((row) => ({ date: row.completed_at, mileage: row.odometer_value! })),
+    ...(serviceEntries ?? [])
+      .filter((row) => row.mileage != null)
+      .map((row) => ({ date: row.entry_date, mileage: row.mileage! })),
+  ];
+  const mileageStats = computeMileageStats(
+    mileageReadings,
+    motHistory?.[0]?.expiry_date ?? null,
+  );
+
+  // Defects a later service entry has already resolved, keyed the same
+  // way the "resolves" selector on the add-entry form builds its list.
+  const resolvedDefectKeys = new Set(
+    (serviceEntries ?? [])
+      .filter((entry) => entry.resolved_mot_history_id != null)
+      .map((entry) => `${entry.resolved_mot_history_id}:${entry.resolved_defect_index}`),
+  );
+
+  const motHistoryById = new Map((motHistory ?? []).map((row) => [row.id, row]));
+  function describeResolvedDefect(entry: ServiceEntry): string | null {
+    if (entry.resolved_mot_history_id == null || entry.resolved_defect_index == null) {
+      return null;
+    }
+    const test = motHistoryById.get(entry.resolved_mot_history_id);
+    const defect = test?.raw_data?.defects?.[entry.resolved_defect_index];
+    return defect ? `Resolves: ${defect.text}` : null;
+  }
 
   const { data: accessGrants } = await supabase
     .from("vehicle_garage_access")
@@ -242,6 +284,15 @@ export default async function VehiclePage({
         </span>
       </div>
 
+      {mileageStats && (
+        <p className="text-sm text-muted-foreground">
+          ~{mileageStats.avgPerYear.toLocaleString()} mi/year · est.{" "}
+          {mileageStats.estimatedYtd.toLocaleString()} mi this year
+          {mileageStats.projectedAtNextMot != null &&
+            ` · ~${mileageStats.projectedAtNextMot.toLocaleString()} mi by next MOT`}
+        </p>
+      )}
+
       <div className="flex gap-2">
         <Link
           href={`/dashboard/vehicles/${id}/add-entry`}
@@ -290,21 +341,37 @@ export default async function VehiclePage({
                       {item.entry.raw_data!.defects!.length === 1 ? "" : "s"}
                     </summary>
                     <ul className="mt-2 flex flex-col gap-1.5">
-                      {item.entry.raw_data!.defects!.map((defect, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span
-                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
-                              DEFECT_BADGE_CLASS[defect.type] ??
-                              DEFECT_BADGE_CLASS.ADVISORY
-                            }`}
-                          >
-                            {defect.type.toLowerCase()}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {defect.text}
-                          </span>
-                        </li>
-                      ))}
+                      {item.entry.raw_data!.defects!.map((defect, index) => {
+                        const resolved = resolvedDefectKeys.has(
+                          `${item.entry.id}:${index}`,
+                        );
+                        return (
+                          <li key={index} className="flex items-start gap-2">
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
+                                DEFECT_BADGE_CLASS[defect.type] ??
+                                DEFECT_BADGE_CLASS.ADVISORY
+                              }`}
+                            >
+                              {defect.type.toLowerCase()}
+                            </span>
+                            <span
+                              className={
+                                resolved
+                                  ? "text-muted-foreground line-through"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {defect.text}
+                            </span>
+                            {resolved && (
+                              <span className="shrink-0 text-xs font-medium text-success">
+                                Resolved
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </details>
                 )}
@@ -336,6 +403,9 @@ export default async function VehiclePage({
                 {item.entry.notes && (
                   <p className="text-muted-foreground">{item.entry.notes}</p>
                 )}
+                {describeResolvedDefect(item.entry) && (
+                  <p className="text-success">{describeResolvedDefect(item.entry)}</p>
+                )}
                 {(attachmentsByEntry.get(item.entry.id) ?? []).map(
                   (attachment) =>
                     attachment.url ? (
@@ -346,11 +416,11 @@ export default async function VehiclePage({
                         rel="noopener noreferrer"
                         className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary-hover"
                       >
-                        📎 {attachment.fileName}
+                        📎 {ATTACHMENT_TYPE_LABELS[attachment.attachmentType] ?? "Attachment"}: {attachment.fileName}
                       </a>
                     ) : (
                       <p key={attachment.id} className="mt-1 text-muted-foreground">
-                        📎 {attachment.fileName} (link unavailable)
+                        📎 {ATTACHMENT_TYPE_LABELS[attachment.attachmentType] ?? "Attachment"}: {attachment.fileName} (link unavailable)
                       </p>
                     ),
                 )}

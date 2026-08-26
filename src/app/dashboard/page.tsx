@@ -119,6 +119,9 @@ export default async function DashboardPage() {
         <Link href="/dashboard/vehicles/receive" className={buttonStyles("ghost")}>
           Receive a vehicle
         </Link>
+        <Link href="/dashboard/resources" className={buttonStyles("ghost")}>
+          Resources
+        </Link>
       </div>
 
       {vehicles.length === 0 ? (
