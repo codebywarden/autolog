@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
+import logo from "@/assets/logo.png";
 import { createClient } from "@/lib/supabase/client";
 import { buttonStyles } from "@/components/ui/styles";
 import { Field, TextInput } from "@/components/ui/field";
@@ -35,6 +37,7 @@ export default function LoginPage() {
   if (status === "sent") {
     return (
       <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-3 p-6">
+        <Image src={logo} alt="AutoLog" className="mb-2 h-auto w-40" />
         <h1 className="text-xl font-bold text-foreground">Check your email</h1>
         <p className="text-sm text-muted-foreground">
           We sent a sign-in link to <strong className="text-foreground">{email}</strong>.
@@ -46,6 +49,7 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
+      <Image src={logo} alt="AutoLog" className="mb-1 h-auto w-40" />
       <h1 className="text-xl font-bold text-foreground">Sign in to AutoLog</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <Field label="Email">

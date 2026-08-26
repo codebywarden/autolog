@@ -1,5 +1,22 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import fs from "node:fs";
+import path from "node:path";
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { TimelineItem } from "@/lib/timeline";
+
+// Read once per warm serverless instance rather than per request — the
+// file never changes at runtime. react-pdf needs real bytes (a data
+// URI works), not the URL a Next.js static import would give a React
+// component in the browser.
+let cachedLogoDataUri: string | null = null;
+
+function getLogoDataUri(): string {
+  if (!cachedLogoDataUri) {
+    const filePath = path.join(process.cwd(), "src", "assets", "logo.png");
+    const base64 = fs.readFileSync(filePath).toString("base64");
+    cachedLogoDataUri = `data:image/png;base64,${base64}`;
+  }
+  return cachedLogoDataUri;
+}
 
 interface VehicleInfo {
   vrm: string;
@@ -11,6 +28,7 @@ interface VehicleInfo {
 
 const styles = StyleSheet.create({
   page: { padding: 32, paddingBottom: 48, fontSize: 10, fontFamily: "Helvetica" },
+  logo: { width: 150, height: 150, marginBottom: -20, marginLeft: -12 },
   title: { fontSize: 18, marginBottom: 4 },
   subtitle: { fontSize: 11, color: "#555555", marginBottom: 20 },
   row: {
@@ -49,6 +67,7 @@ export function VehicleHistoryDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <Image src={getLogoDataUri()} style={styles.logo} />
         <Text style={styles.title}>{vehicle.vrm}</Text>
         <Text style={styles.subtitle}>
           {[vehicle.make, vehicle.model, vehicle.colour, vehicle.fuel_type]
