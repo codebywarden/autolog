@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
+import { TextInput } from "@/components/ui/field";
 
 interface DvsaMotTestSummary {
   testResult: "PASSED" | "FAILED" | string;
@@ -87,22 +89,20 @@ export default function AddVehiclePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-xl font-semibold">Add a vehicle</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        Add a vehicle
+      </h1>
 
       {step === "search" && (
         <form onSubmit={handleLookup} className="flex gap-2">
-          <input
+          <TextInput
             value={vrm}
             onChange={(event) => setVrm(event.target.value)}
             placeholder="AB12CDE"
             required
-            className="flex-1 rounded border border-neutral-300 px-3 py-2 text-sm uppercase"
+            className="flex-1 font-mono uppercase tracking-wide"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className={buttonStyles("primary")}>
             {loading ? "Looking up…" : "Look up"}
           </button>
         </form>
@@ -110,10 +110,14 @@ export default function AddVehiclePage() {
 
       {(step === "preview" || step === "saving") && vehicle && (
         <div className="flex flex-col gap-4">
-          <div className="rounded border border-neutral-300 p-4 text-sm">
-            <p className="text-lg font-semibold">{vehicle.registration}</p>
-            <p>{[vehicle.make, vehicle.model].filter(Boolean).join(" ")}</p>
-            <p className="text-neutral-600">
+          <div className={cardStyles("text-sm")}>
+            <p className="font-mono text-lg font-semibold tracking-wide text-foreground">
+              {vehicle.registration}
+            </p>
+            <p className="text-foreground">
+              {[vehicle.make, vehicle.model].filter(Boolean).join(" ")}
+            </p>
+            <p className="text-muted-foreground">
               {[
                 vehicle.primaryColour,
                 vehicle.fuelType,
@@ -123,19 +127,23 @@ export default function AddVehiclePage() {
                 .join(" · ")}
             </p>
             {latestTest ? (
-              <p className="mt-2">
+              <p className="mt-2 text-foreground">
                 Latest MOT:{" "}
-                <strong>
+                <strong
+                  className={
+                    latestTest.testResult === "PASSED" ? "text-success" : "text-critical"
+                  }
+                >
                   {latestTest.testResult === "PASSED" ? "Pass" : "Fail"}
                 </strong>
                 {latestTest.expiryDate && ` · expires ${latestTest.expiryDate}`}
               </p>
             ) : (
-              <p className="mt-2 text-neutral-600">
+              <p className="mt-2 text-muted-foreground">
                 No MOT history found — likely a newer vehicle.
               </p>
             )}
-            <p className="mt-1 text-neutral-500">
+            <p className="mt-1 text-muted-foreground">
               {vehicle.motTests.length} MOT test(s) on record
             </p>
           </div>
@@ -147,14 +155,14 @@ export default function AddVehiclePage() {
                 setVehicle(null);
               }}
               disabled={step === "saving"}
-              className="rounded border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-50"
+              className={buttonStyles("secondary")}
             >
               Search again
             </button>
             <button
               onClick={handleConfirm}
               disabled={step === "saving"}
-              className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className={buttonStyles("primary")}
             >
               {step === "saving" ? "Adding…" : "Add to AutoLog"}
             </button>
@@ -162,7 +170,7 @@ export default function AddVehiclePage() {
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-critical">{error}</p>}
     </main>
   );
 }

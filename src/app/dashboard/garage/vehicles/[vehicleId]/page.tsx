@@ -6,6 +6,7 @@ import {
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
 interface Attachment {
   id: string;
@@ -93,13 +94,18 @@ export default async function GarageVehiclePage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
-      <Link href="/dashboard/garage" className="text-sm text-neutral-500">
+      <Link
+        href="/dashboard/garage"
+        className="text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
         ← Garage portal
       </Link>
 
       <div>
-        <h1 className="text-xl font-semibold">{vehicle.vrm}</h1>
-        <p className="text-neutral-600">
+        <h1 className="font-mono text-2xl font-semibold tracking-wide text-foreground">
+          {vehicle.vrm}
+        </h1>
+        <p className="text-muted-foreground">
           {[vehicle.make, vehicle.model, vehicle.colour, vehicle.fuel_type]
             .filter(Boolean)
             .join(" · ")}
@@ -108,36 +114,33 @@ export default async function GarageVehiclePage({
 
       <Link
         href={`/dashboard/garage/vehicles/${vehicleId}/add-entry`}
-        className="rounded bg-black px-4 py-2 text-center text-sm font-medium text-white"
+        className={buttonStyles("primary")}
       >
         Add verified entry
       </Link>
 
       {timeline.length === 0 ? (
-        <p className="text-sm text-neutral-600">No history yet.</p>
+        <p className={cardStyles("text-sm text-muted-foreground")}>
+          No history yet.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {timeline.map((item) =>
             item.kind === "mot" ? (
-              <li
-                key={`mot-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
-              >
+              <li key={`mot-${item.entry.id}`} className={cardStyles("text-sm")}>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">MOT test</span>
+                  <span className="font-semibold text-foreground">MOT test</span>
                   <span
-                    className={
-                      item.entry.result === "PASS"
-                        ? "text-green-700"
-                        : "text-red-700"
-                    }
+                    className={`text-xs font-semibold ${
+                      item.entry.result === "PASS" ? "text-success" : "text-critical"
+                    }`}
                   >
                     {item.entry.result === "PASS" ? "Pass" : "Fail"}
                   </span>
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.odometer_value != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.odometer_value.toLocaleString()}{" "}
                     {item.entry.odometer_unit}
                   </p>
@@ -146,27 +149,29 @@ export default async function GarageVehiclePage({
             ) : (
               <li
                 key={`service-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
+                className={cardStyles("text-sm")}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold capitalize">
+                  <span className="font-semibold capitalize text-foreground">
                     {item.entry.service_type}
                   </span>
                   {item.entry.verified && (
-                    <span className="text-xs uppercase text-green-700">
+                    <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold uppercase text-success">
                       Verified
                     </span>
                   )}
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.mileage != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.mileage.toLocaleString()} mi
                   </p>
                 )}
-                {item.entry.garage_name && <p>{item.entry.garage_name}</p>}
+                {item.entry.garage_name && (
+                  <p className="text-foreground">{item.entry.garage_name}</p>
+                )}
                 {item.entry.notes && (
-                  <p className="text-neutral-600">{item.entry.notes}</p>
+                  <p className="text-muted-foreground">{item.entry.notes}</p>
                 )}
                 {(attachmentsByEntry.get(item.entry.id) ?? []).map(
                   (attachment) =>
@@ -176,12 +181,12 @@ export default async function GarageVehiclePage({
                         href={attachment.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-block text-blue-700 underline"
+                        className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary-hover"
                       >
                         📎 {attachment.fileName}
                       </a>
                     ) : (
-                      <p key={attachment.id} className="mt-1 text-neutral-500">
+                      <p key={attachment.id} className="mt-1 text-muted-foreground">
                         📎 {attachment.fileName} (link unavailable)
                       </p>
                     ),

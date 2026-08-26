@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { buttonStyles } from "@/components/ui/styles";
+import { Field, TextInput, Select, Textarea } from "@/components/ui/field";
 
 const SERVICE_TYPES = [
   "service",
@@ -109,90 +111,77 @@ export function AddEntryForm({ vehicleId }: { vehicleId: string }) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-xl font-semibold">Add service entry</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        Add service entry
+      </h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Date
-          <input
+        <Field label="Date">
+          <TextInput
             type="date"
             value={entryDate}
             onChange={(event) => setEntryDate(event.target.value)}
             required
-            className="rounded border border-neutral-300 px-3 py-2"
           />
-        </label>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Mileage
-          <input
+        <Field label="Mileage">
+          <TextInput
             type="number"
             inputMode="numeric"
             min={0}
             value={mileage}
             onChange={(event) => setMileage(event.target.value)}
             placeholder="e.g. 84210"
-            className="rounded border border-neutral-300 px-3 py-2"
           />
-        </label>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Type
-          <select
+        <Field label="Type">
+          <Select
             value={serviceType}
             onChange={(event) =>
               setServiceType(
                 event.target.value as (typeof SERVICE_TYPES)[number],
               )
             }
-            className="rounded border border-neutral-300 px-3 py-2"
           >
             {SERVICE_TYPES.map((type) => (
               <option key={type} value={type}>
                 {type[0].toUpperCase() + type.slice(1)}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Garage
-          <input
+        <Field label="Garage">
+          <TextInput
             type="text"
             value={garageName}
             onChange={(event) => setGarageName(event.target.value)}
             placeholder="e.g. Smith's Garage"
-            className="rounded border border-neutral-300 px-3 py-2"
           />
-        </label>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Notes
-          <textarea
+        <Field label="Notes">
+          <Textarea
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
-            className="rounded border border-neutral-300 px-3 py-2"
           />
-        </label>
+        </Field>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Invoice (photo or PDF, optional)
+        <Field label="Invoice (photo or PDF, optional)">
           <input
             type="file"
             accept="image/*,.pdf"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            className="text-sm"
+            className="text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
           />
-        </label>
+        </Field>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={saving} className={buttonStyles("primary")}>
           {saving ? "Saving…" : "Save entry"}
         </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-critical">{error}</p>}
       </form>
     </main>
   );

@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
+import { Field, TextInput } from "@/components/ui/field";
 
 export function RedeemCodeForm() {
   const router = useRouter();
@@ -48,30 +50,22 @@ export function RedeemCodeForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded border border-neutral-300 p-3"
-    >
-      <label className="flex flex-col gap-1 text-sm">
-        Redeem a vehicle access code
-        <input
+    <form onSubmit={handleSubmit} className={cardStyles("flex flex-col gap-2")}>
+      <Field label="Redeem a vehicle access code">
+        <TextInput
           type="text"
           value={code}
           onChange={(event) => setCode(event.target.value)}
           placeholder="e.g. AB12CD34"
           required
-          className="rounded border border-neutral-300 px-3 py-2 uppercase"
+          className="uppercase"
         />
-      </label>
-      <button
-        type="submit"
-        disabled={saving}
-        className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
+      </Field>
+      <button type="submit" disabled={saving} className={buttonStyles("primary")}>
         {saving ? "Redeeming…" : "Redeem code"}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-700">{success}</p>}
+      {error && <p className="text-sm text-critical">{error}</p>}
+      {success && <p className="text-sm text-success">{success}</p>}
     </form>
   );
 }

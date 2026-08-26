@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { buttonStyles } from "@/components/ui/styles";
+import { Field, TextInput } from "@/components/ui/field";
 
 export function CreateGarageForm() {
   const router = useRouter();
@@ -58,25 +60,19 @@ export function CreateGarageForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Garage name
-        <input
+      <Field label="Garage name">
+        <TextInput
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Smith's Garage"
           required
-          className="rounded border border-neutral-300 px-3 py-2"
         />
-      </label>
-      <button
-        type="submit"
-        disabled={saving}
-        className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
+      </Field>
+      <button type="submit" disabled={saving} className={buttonStyles("primary")}>
         {saving ? "Creating…" : "Create garage"}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-critical">{error}</p>}
     </form>
   );
 }

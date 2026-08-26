@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { buttonStyles } from "@/components/ui/styles";
+import { TextInput } from "@/components/ui/field";
 
 export function ReceiveVehicleForm() {
   const router = useRouter();
@@ -45,28 +47,26 @@ export function ReceiveVehicleForm() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-xl font-semibold">Receive a vehicle</h1>
-      <p className="text-sm text-neutral-600">
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        Receive a vehicle
+      </h1>
+      <p className="text-sm text-muted-foreground">
         Enter the transfer code the current owner gave you. This makes
         you the new owner and ends their access to it immediately.
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
+        <TextInput
           type="text"
           value={code}
           onChange={(event) => setCode(event.target.value)}
           placeholder="e.g. AB12CD34"
           required
-          className="rounded border border-neutral-300 px-3 py-2 uppercase"
+          className="uppercase"
         />
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={saving} className={buttonStyles("primary")}>
           {saving ? "Transferring…" : "Confirm transfer"}
         </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-critical">{error}</p>}
       </form>
     </main>
   );

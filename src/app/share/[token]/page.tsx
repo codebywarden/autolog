@@ -1,10 +1,13 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
+import logo from "@/assets/logo.png";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildTimeline,
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
+import { buttonStyles, cardStyles } from "@/components/ui/styles";
 
 export default async function SharePage({
   params,
@@ -63,14 +66,19 @@ export default async function SharePage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
-      <div className="rounded border border-green-700 bg-green-50 p-3 text-sm text-green-800">
-        ✓ Verified AutoLog history — shared read-only. Invoice
-        attachments aren&apos;t included.
+      <Image src={logo} alt="AutoLog" className="h-auto w-32" />
+
+      <div className="flex items-center gap-2 rounded-xl border border-success/25 bg-success-bg px-4 py-3 text-sm font-medium text-success">
+        <span aria-hidden>✓</span>
+        Verified AutoLog history — shared read-only. Invoice attachments
+        aren&apos;t included.
       </div>
 
       <div>
-        <h1 className="text-xl font-semibold">{vehicle.vrm}</h1>
-        <p className="text-neutral-600">
+        <h1 className="font-mono text-2xl font-semibold tracking-wide text-foreground">
+          {vehicle.vrm}
+        </h1>
+        <p className="text-muted-foreground">
           {[vehicle.make, vehicle.model, vehicle.colour, vehicle.fuel_type]
             .filter(Boolean)
             .join(" · ")}
@@ -79,36 +87,33 @@ export default async function SharePage({
 
       <a
         href={`/api/share/${token}/export`}
-        className="rounded border border-neutral-300 px-4 py-2 text-center text-sm font-medium"
+        className={buttonStyles("secondary")}
       >
         Download PDF
       </a>
 
       {timeline.length === 0 ? (
-        <p className="text-sm text-neutral-600">No history recorded yet.</p>
+        <p className={cardStyles("text-sm text-muted-foreground")}>
+          No history recorded yet.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {timeline.map((item) =>
             item.kind === "mot" ? (
-              <li
-                key={`mot-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
-              >
+              <li key={`mot-${item.entry.id}`} className={cardStyles("text-sm")}>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">MOT test</span>
+                  <span className="font-semibold text-foreground">MOT test</span>
                   <span
-                    className={
-                      item.entry.result === "PASS"
-                        ? "text-green-700"
-                        : "text-red-700"
-                    }
+                    className={`text-xs font-semibold ${
+                      item.entry.result === "PASS" ? "text-success" : "text-critical"
+                    }`}
                   >
                     {item.entry.result === "PASS" ? "Pass" : "Fail"}
                   </span>
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.odometer_value != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.odometer_value.toLocaleString()}{" "}
                     {item.entry.odometer_unit}
                   </p>
@@ -117,27 +122,29 @@ export default async function SharePage({
             ) : (
               <li
                 key={`service-${item.entry.id}`}
-                className="rounded border border-neutral-300 p-3 text-sm"
+                className={cardStyles("text-sm")}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold capitalize">
+                  <span className="font-semibold capitalize text-foreground">
                     {item.entry.service_type}
                   </span>
                   {item.entry.verified && (
-                    <span className="text-xs uppercase text-green-700">
+                    <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold uppercase text-success">
                       Verified
                     </span>
                   )}
                 </div>
-                <p className="text-neutral-600">{item.date}</p>
+                <p className="mt-0.5 text-muted-foreground">{item.date}</p>
                 {item.entry.mileage != null && (
-                  <p className="text-neutral-600">
+                  <p className="text-muted-foreground">
                     {item.entry.mileage.toLocaleString()} mi
                   </p>
                 )}
-                {item.entry.garage_name && <p>{item.entry.garage_name}</p>}
+                {item.entry.garage_name && (
+                  <p className="text-foreground">{item.entry.garage_name}</p>
+                )}
                 {item.entry.notes && (
-                  <p className="text-neutral-600">{item.entry.notes}</p>
+                  <p className="text-muted-foreground">{item.entry.notes}</p>
                 )}
               </li>
             ),

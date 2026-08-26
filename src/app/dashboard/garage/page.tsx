@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { cardStyles } from "@/components/ui/styles";
 import { CreateGarageForm } from "./create-garage-form";
 import { RedeemCodeForm } from "./redeem-code-form";
 
@@ -41,11 +42,16 @@ export default async function GaragePortalPage() {
   if (!garage) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-        <Link href="/dashboard" className="text-sm text-neutral-500">
+        <Link
+          href="/dashboard"
+          className="text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
           ← Your vehicles
         </Link>
-        <h1 className="text-xl font-semibold">Set up your garage</h1>
-        <p className="text-sm text-neutral-600">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Set up your garage
+        </h1>
+        <p className="text-sm text-muted-foreground">
           Create a garage account to redeem vehicle access codes and add
           verified service entries.
         </p>
@@ -67,28 +73,39 @@ export default async function GaragePortalPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <Link href="/dashboard" className="text-sm text-neutral-500">
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
         ← Your vehicles
       </Link>
-      <h1 className="text-xl font-semibold">{garage.name}</h1>
-      <p className="text-sm text-neutral-600">Garage portal</p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {garage.name}
+        </h1>
+        <p className="text-sm text-muted-foreground">Garage portal</p>
+      </div>
 
       <RedeemCodeForm />
 
       {vehicles.length === 0 ? (
-        <p className="text-sm text-neutral-600">
+        <p className={cardStyles("text-sm text-muted-foreground")}>
           No vehicles yet — redeem a code from a customer to get access.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {vehicles.map((vehicle) => (
             <li key={vehicle.id}>
               <Link
                 href={`/dashboard/garage/vehicles/${vehicle.id}`}
-                className="block rounded border border-neutral-300 p-3 text-sm hover:border-neutral-400"
+                className={cardStyles(
+                  "block text-sm transition-colors hover:border-border-strong",
+                )}
               >
-                <p className="font-semibold">{vehicle.vrm}</p>
-                <p className="text-neutral-600">
+                <p className="font-mono text-base font-semibold tracking-wide text-foreground">
+                  {vehicle.vrm}
+                </p>
+                <p className="text-muted-foreground">
                   {[vehicle.make, vehicle.model, vehicle.colour]
                     .filter(Boolean)
                     .join(" · ")}
