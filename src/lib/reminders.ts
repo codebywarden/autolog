@@ -68,3 +68,50 @@ export function computeServiceStatus(
   }
   return { level: "ok", message: `Next service due ${dueDateStr}` };
 }
+
+export interface ProgressStatus {
+  percent: number;
+  level: ReminderLevel;
+}
+
+/** Percent of the way through the current MOT cycle (test to expiry). */
+export function computeMotProgress(
+  latest: { completed_at: string; expiry_date: string | null } | null,
+): ProgressStatus | null {
+  if (!latest || !latest.expiry_date) return null;
+
+  const start = new Date(latest.completed_at).getTime();
+  const end = new Date(latest.expiry_date).getTime();
+  if (end <= start) return null;
+
+  const now = Date.now();
+  const percent = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+  const remaining = daysUntil(new Date(latest.expiry_date));
+  const level: ReminderLevel =
+    remaining < 0 ? "critical" : remaining <= DUE_SOON_DAYS ? "warning" : "ok";
+
+  return { percent, level };
+}
+
+/** Percent of the way through the assumed 12-month service interval. */
+export function computeServiceProgress(
+  latestEntryDate: string | null,
+): ProgressStatus | null {
+  if (!latestEntryDate) return null;
+
+  const start = new Date(latestEntryDate);
+  const due = new Date(start);
+  due.setMonth(due.getMonth() + SERVICE_INTERVAL_MONTHS);
+
+  const now = Date.now();
+  const total = due.getTime() - start.getTime();
+  const percent = Math.min(
+    100,
+    Math.max(0, ((now - start.getTime()) / total) * 100),
+  );
+  const remaining = daysUntil(due);
+  const level: ReminderLevel =
+    remaining < 0 ? "critical" : remaining <= DUE_SOON_DAYS ? "warning" : "ok";
+
+  return { percent, level };
+}
