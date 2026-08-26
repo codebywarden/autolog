@@ -40,7 +40,7 @@ export function AppHeader() {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           onClick={() => setOpen(false)}
         >
-          <Image src={logo} alt="AutoLog" className="h-20 w-auto" priority />
+          <Image src={logo} alt="AutoLog" className="h-28 w-auto" priority />
         </Link>
 
         <button
