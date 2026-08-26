@@ -97,26 +97,18 @@ export default async function DashboardPage() {
         Signed in as {user.email}
       </p>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          <Link
-            href="/dashboard/vehicles/add"
-            className={buttonStyles("primary", "flex-1")}
-          >
-            Add a vehicle
-          </Link>
-          <Link
-            href="/dashboard/garage"
-            className={buttonStyles("secondary", "flex-1")}
-          >
-            Garage portal
-          </Link>
-        </div>
-        <Link href="/dashboard/vehicles/receive" className={buttonStyles("ghost")}>
-          Receive a vehicle
+      <div className="flex gap-2">
+        <Link
+          href="/dashboard/vehicles/add"
+          className={buttonStyles("primary", "flex-1")}
+        >
+          Add a vehicle
         </Link>
-        <Link href="/dashboard/resources" className={buttonStyles("ghost")}>
-          Resources
+        <Link
+          href="/dashboard/vehicles/receive"
+          className={buttonStyles("secondary", "flex-1")}
+        >
+          Receive a vehicle
         </Link>
       </div>
 

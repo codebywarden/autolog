@@ -29,20 +29,20 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface">
-      <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-2.5">
+      <div className="relative mx-auto flex max-w-2xl items-center justify-end px-4 py-3">
         <Link
           href="/dashboard"
-          className="flex items-center"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           onClick={() => setOpen(false)}
         >
-          <Image src={logo} alt="AutoLog" className="h-8 w-auto" priority />
+          <Image src={logo} alt="AutoLog" className="h-11 w-auto" priority />
         </Link>
 
         <button
           onClick={() => setOpen((value) => !value)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground hover:bg-background"
+          className="relative z-10 flex h-9 w-9 items-center justify-center rounded-lg text-foreground hover:bg-background"
         >
           {open ? (
             <svg
