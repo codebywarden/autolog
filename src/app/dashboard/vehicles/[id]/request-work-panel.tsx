@@ -26,6 +26,7 @@ export function RequestWorkPanel({
   const [garageId, setGarageId] = useState(connectedGarages[0]?.garageId ?? "");
   const [notes, setNotes] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
   const [relatesToKey, setRelatesToKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function RequestWorkPanel({
       requested_by: user.id,
       notes,
       preferred_date: preferredDate || null,
+      contact_info: contactInfo || null,
       resolved_mot_history_id: resolvedMotHistoryId,
       resolved_defect_index:
         resolvedDefectIndex != null ? Number(resolvedDefectIndex) : null,
@@ -71,6 +73,7 @@ export function RequestWorkPanel({
     setOpen(false);
     setNotes("");
     setPreferredDate("");
+    setContactInfo("");
     setRelatesToKey("");
     router.refresh();
   }
@@ -119,6 +122,15 @@ export function RequestWorkPanel({
           type="date"
           value={preferredDate}
           onChange={(event) => setPreferredDate(event.target.value)}
+        />
+      </Field>
+
+      <Field label="Contact details for the garage (optional)">
+        <TextInput
+          type="text"
+          value={contactInfo}
+          onChange={(event) => setContactInfo(event.target.value)}
+          placeholder="Phone number or best way to reach you"
         />
       </Field>
 

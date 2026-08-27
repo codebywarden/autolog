@@ -6,6 +6,7 @@ import { CreateGarageForm } from "./create-garage-form";
 import { RedeemCodeForm } from "./redeem-code-form";
 import { VerificationRequestActions } from "./verification-request-actions";
 import { WorkRequestActions } from "./work-request-actions";
+import { WorkRequestThread, type WorkRequestMessage } from "@/components/work-request-thread";
 
 interface GarageMembership {
   garage: { id: string; name: string } | null;
@@ -38,8 +39,18 @@ interface PendingWorkRequestRow {
   id: string;
   notes: string;
   preferred_date: string | null;
+  contact_info: string | null;
   created_at: string;
   vehicle: { id: string; vrm: string } | null;
+}
+
+interface WorkRequestMessageRow {
+  id: string;
+  work_request_id: string;
+  sender_role: "owner" | "garage";
+  sender_label: string;
+  body: string;
+  created_at: string;
 }
 
 export default async function GaragePortalPage() {
@@ -107,13 +118,39 @@ export default async function GaragePortalPage() {
 
   const { data: pendingWorkRequestRows } = await supabase
     .from("work_requests")
-    .select("id, notes, preferred_date, created_at, vehicle:vehicles(id, vrm)")
+    .select(
+      "id, notes, preferred_date, contact_info, created_at, vehicle:vehicles(id, vrm)",
+    )
     .eq("garage_id", garage.id)
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .returns<PendingWorkRequestRow[]>();
 
   const pendingWorkRequests = pendingWorkRequestRows ?? [];
+
+  const pendingWorkRequestIds = pendingWorkRequests.map((request) => request.id);
+  const { data: workRequestMessageRows } =
+    pendingWorkRequestIds.length > 0
+      ? await supabase
+          .from("work_request_messages")
+          .select("id, work_request_id, sender_role, sender_label, body, created_at")
+          .in("work_request_id", pendingWorkRequestIds)
+          .order("created_at", { ascending: true })
+          .returns<WorkRequestMessageRow[]>()
+      : { data: [] as WorkRequestMessageRow[] };
+
+  const messagesByWorkRequest = new Map<string, WorkRequestMessage[]>();
+  for (const message of workRequestMessageRows ?? []) {
+    const list = messagesByWorkRequest.get(message.work_request_id) ?? [];
+    list.push({
+      id: message.id,
+      senderRole: message.sender_role,
+      senderLabel: message.sender_label,
+      body: message.body,
+      createdAt: message.created_at,
+    });
+    messagesByWorkRequest.set(message.work_request_id, list);
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
@@ -185,7 +222,18 @@ export default async function GaragePortalPage() {
                     Preferred: {request.preferred_date}
                   </p>
                 )}
+                {request.contact_info && (
+                  <p className="text-muted-foreground">
+                    Contact: {request.contact_info}
+                  </p>
+                )}
                 <WorkRequestActions requestId={request.id} />
+                <WorkRequestThread
+                  workRequestId={request.id}
+                  viewerRole="garage"
+                  senderLabel={garage.name}
+                  initialMessages={messagesByWorkRequest.get(request.id) ?? []}
+                />
               </li>
             ))}
           </ul>

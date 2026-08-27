@@ -127,12 +127,10 @@ export default async function DashboardPage() {
             );
 
             return (
-              <li key={vehicle.id}>
+              <li key={vehicle.id} className={cardStyles("text-sm")}>
                 <Link
                   href={`/dashboard/vehicles/${vehicle.id}`}
-                  className={cardStyles(
-                    "block text-sm transition-colors hover:border-border-strong",
-                  )}
+                  className="block"
                 >
                   <p className="font-mono text-base font-semibold tracking-wide text-foreground">
                     {vehicle.vrm}
@@ -154,6 +152,12 @@ export default async function DashboardPage() {
                       {serviceStatus.message}
                     </span>
                   </div>
+                </Link>
+                <Link
+                  href={`/dashboard/vehicles/${vehicle.id}#book-work`}
+                  className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-xs font-semibold text-primary hover:text-primary-hover"
+                >
+                  🔧 Book work
                 </Link>
               </li>
             );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cardStyles } from "@/components/ui/styles";
+import { WorkRequestThread, type WorkRequestMessage } from "@/components/work-request-thread";
 
 interface WorkRequest {
   id: string;
@@ -13,6 +14,7 @@ interface WorkRequest {
   status: "pending" | "accepted" | "declined" | "cancelled";
   garageResponseNote: string | null;
   garageName: string;
+  messages: WorkRequestMessage[];
 }
 
 const STATUS_BADGE_CLASS: Record<WorkRequest["status"], string> = {
@@ -29,7 +31,13 @@ const STATUS_LABEL: Record<WorkRequest["status"], string> = {
   cancelled: "Cancelled",
 };
 
-export function WorkRequestList({ requests }: { requests: WorkRequest[] }) {
+export function WorkRequestList({
+  requests,
+  ownerLabel,
+}: {
+  requests: WorkRequest[];
+  ownerLabel: string;
+}) {
   const router = useRouter();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +104,12 @@ export function WorkRequestList({ requests }: { requests: WorkRequest[] }) {
               {cancellingId === request.id ? "Cancelling…" : "Cancel request"}
             </button>
           )}
+          <WorkRequestThread
+            workRequestId={request.id}
+            viewerRole="owner"
+            senderLabel={ownerLabel}
+            initialMessages={request.messages}
+          />
         </li>
       ))}
       {error && <p className="text-sm text-critical">{error}</p>}

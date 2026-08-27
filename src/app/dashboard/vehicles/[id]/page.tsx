@@ -58,6 +58,15 @@ interface WorkRequestRow {
   garage: { name: string } | null;
 }
 
+interface WorkRequestMessageRow {
+  id: string;
+  work_request_id: string;
+  sender_role: "owner" | "garage";
+  sender_label: string;
+  body: string;
+  created_at: string;
+}
+
 interface ShareLinkRow {
   id: string;
   expires_at: string;
@@ -290,6 +299,24 @@ export default async function VehiclePage({
     .order("created_at", { ascending: false })
     .returns<WorkRequestRow[]>();
 
+  const workRequestIds = (workRequestRows ?? []).map((row) => row.id);
+  const { data: workRequestMessageRows } =
+    workRequestIds.length > 0
+      ? await supabase
+          .from("work_request_messages")
+          .select("id, work_request_id, sender_role, sender_label, body, created_at")
+          .in("work_request_id", workRequestIds)
+          .order("created_at", { ascending: true })
+          .returns<WorkRequestMessageRow[]>()
+      : { data: [] as WorkRequestMessageRow[] };
+
+  const messagesByRequest = new Map<string, WorkRequestMessageRow[]>();
+  for (const message of workRequestMessageRows ?? []) {
+    const list = messagesByRequest.get(message.work_request_id) ?? [];
+    list.push(message);
+    messagesByRequest.set(message.work_request_id, list);
+  }
+
   const workRequests = (workRequestRows ?? []).map((row) => ({
     id: row.id,
     notes: row.notes,
@@ -298,6 +325,13 @@ export default async function VehiclePage({
     status: row.status,
     garageResponseNote: row.garage_response_note,
     garageName: row.garage?.name ?? "the garage",
+    messages: (messagesByRequest.get(row.id) ?? []).map((message) => ({
+      id: message.id,
+      senderRole: message.sender_role,
+      senderLabel: message.sender_label,
+      body: message.body,
+      createdAt: message.created_at,
+    })),
   }));
 
   const { data: shareLinkRows } = await supabase
@@ -391,6 +425,33 @@ export default async function VehiclePage({
         >
           Export PDF
         </a>
+      </div>
+
+      <div id="book-work" className={cardStyles("flex scroll-mt-20 flex-col gap-3")}>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Book work
+        </p>
+        {connectedGarages.length > 0 ? (
+          <RequestWorkPanel
+            vehicleId={id}
+            connectedGarages={connectedGarages}
+            resolvableDefects={resolvableDefects}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            <Link
+              href="#access-sharing"
+              className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover"
+            >
+              Grant a garage access
+            </Link>{" "}
+            to be able to request work from them.
+          </p>
+        )}
+        <WorkRequestList
+          requests={workRequests}
+          ownerLabel={user.email ?? "You"}
+        />
       </div>
 
       {timeline.length === 0 ? (
@@ -576,23 +637,7 @@ export default async function VehiclePage({
         </details>
       )}
 
-      {(connectedGarages.length > 0 || workRequests.length > 0) && (
-        <div className="mt-4 flex flex-col gap-3 border-t border-border pt-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Book work
-          </p>
-          {connectedGarages.length > 0 && (
-            <RequestWorkPanel
-              vehicleId={id}
-              connectedGarages={connectedGarages}
-              resolvableDefects={resolvableDefects}
-            />
-          )}
-          <WorkRequestList requests={workRequests} />
-        </div>
-      )}
-
-      <div className="mt-4 flex flex-col gap-3 border-t border-border pt-5">
+      <div id="access-sharing" className="mt-4 flex scroll-mt-20 flex-col gap-3 border-t border-border pt-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Access &amp; sharing
         </p>
