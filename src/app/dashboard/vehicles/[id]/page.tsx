@@ -30,6 +30,7 @@ import { TransferCodeList } from "./transfer-code-list";
 import { MotCostField } from "./mot-cost-field";
 import { DeleteEntryButton } from "./delete-entry-button";
 import { RequestVerificationControl } from "./request-verification-control";
+import { AffiliateSuggestion } from "@/components/affiliate-suggestion";
 import { RequestWorkPanel } from "./request-work-panel";
 import { WorkRequestList } from "./work-request-list";
 
@@ -508,28 +509,33 @@ export default async function VehiclePage({
                           `${item.entry.id}:${index}`,
                         );
                         return (
-                          <li key={index} className="flex items-start gap-2">
-                            <span
-                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
-                                DEFECT_BADGE_CLASS[defect.type] ??
-                                DEFECT_BADGE_CLASS.ADVISORY
-                              }`}
-                            >
-                              {defect.type.toLowerCase()}
-                            </span>
-                            <span
-                              className={
-                                resolved
-                                  ? "text-muted-foreground line-through"
-                                  : "text-muted-foreground"
-                              }
-                            >
-                              {defect.text}
-                            </span>
-                            {resolved && (
-                              <span className="shrink-0 text-xs font-medium text-success">
-                                Resolved
+                          <li key={index} className="flex flex-col gap-1">
+                            <div className="flex items-start gap-2">
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${
+                                  DEFECT_BADGE_CLASS[defect.type] ??
+                                  DEFECT_BADGE_CLASS.ADVISORY
+                                }`}
+                              >
+                                {defect.type.toLowerCase()}
                               </span>
+                              <span
+                                className={
+                                  resolved
+                                    ? "text-muted-foreground line-through"
+                                    : "text-muted-foreground"
+                                }
+                              >
+                                {defect.text}
+                              </span>
+                              {resolved && (
+                                <span className="shrink-0 text-xs font-medium text-success">
+                                  Resolved
+                                </span>
+                              )}
+                            </div>
+                            {!resolved && (
+                              <AffiliateSuggestion defectText={defect.text} />
                             )}
                           </li>
                         );

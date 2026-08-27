@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cardStyles } from "@/components/ui/styles";
+import { AFFILIATE_CATEGORIES } from "@/lib/affiliate-links";
 import {
   TextIcon,
   BatteryIcon,
@@ -221,6 +222,36 @@ export default async function ResourcesPage() {
               className="text-sm text-primary underline underline-offset-2 hover:text-primary-hover"
             >
               {link.label} ↗
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Compare &amp; save
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Some of these links may be affiliate links — Motor360 may earn a
+            commission if you make a purchase, at no extra cost to you.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {AFFILIATE_CATEGORIES.map((category) => (
+            <a
+              key={category.id}
+              href={category.href}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className={cardStyles(
+                "text-sm transition-colors hover:border-border-strong",
+              )}
+            >
+              <p className="font-semibold text-foreground">
+                {category.label} ↗
+              </p>
+              <p className="mt-0.5 text-muted-foreground">{category.blurb}</p>
             </a>
           ))}
         </div>

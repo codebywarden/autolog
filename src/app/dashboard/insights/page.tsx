@@ -11,6 +11,7 @@ import {
 import { computeMileageStats, type MileageReading } from "@/lib/mileage";
 import { cardStyles } from "@/components/ui/styles";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { AffiliateSuggestion } from "@/components/affiliate-suggestion";
 import { DefectDonut, type DefectSeverity } from "./defect-donut";
 import { MarkResolvedButton } from "./mark-resolved-button";
 
@@ -415,14 +416,17 @@ export default async function InsightsPage() {
                       {stat.unresolvedDefects.map((defect) => (
                         <li
                           key={defect.defectIndex}
-                          className="flex items-start justify-between gap-3 rounded-lg bg-background px-2.5 py-2"
+                          className="flex flex-col gap-1.5 rounded-lg bg-background px-2.5 py-2"
                         >
-                          <span className="text-foreground">{defect.text}</span>
-                          <MarkResolvedButton
-                            vehicleId={stat.vehicle.id}
-                            motHistoryId={defect.motHistoryId}
-                            defectIndex={defect.defectIndex}
-                          />
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="text-foreground">{defect.text}</span>
+                            <MarkResolvedButton
+                              vehicleId={stat.vehicle.id}
+                              motHistoryId={defect.motHistoryId}
+                              defectIndex={defect.defectIndex}
+                            />
+                          </div>
+                          <AffiliateSuggestion defectText={defect.text} />
                         </li>
                       ))}
                     </ul>
