@@ -12,7 +12,7 @@ interface WorkRequest {
   preferredDate: string | null;
   scheduledDate: string | null;
   scheduledTime: string | null;
-  status: "pending" | "accepted" | "declined" | "cancelled";
+  status: "pending" | "accepted" | "declined" | "cancelled" | "completed";
   garageResponseNote: string | null;
   garageName: string;
   messages: WorkRequestMessage[];
@@ -23,6 +23,7 @@ const STATUS_BADGE_CLASS: Record<WorkRequest["status"], string> = {
   accepted: "bg-success-bg text-success",
   declined: "bg-critical-bg text-critical",
   cancelled: "bg-neutral-badge-bg text-neutral-badge",
+  completed: "bg-success-bg text-success",
 };
 
 const STATUS_LABEL: Record<WorkRequest["status"], string> = {
@@ -30,6 +31,7 @@ const STATUS_LABEL: Record<WorkRequest["status"], string> = {
   accepted: "Accepted",
   declined: "Declined",
   cancelled: "Cancelled",
+  completed: "Completed",
 };
 
 export function WorkRequestList({

@@ -8,6 +8,7 @@ import { VerificationRequestActions } from "./verification-request-actions";
 import { WorkRequestActions } from "./work-request-actions";
 import { WorkRequestThread, type WorkRequestMessage } from "@/components/work-request-thread";
 import { CalendarFeedPanel } from "./calendar-feed-panel";
+import { AcceptedJobActions } from "./accepted-job-actions";
 
 interface GarageMembership {
   garage: { id: string; name: string; calendar_feed_token: string } | null;
@@ -385,6 +386,12 @@ export default async function GaragePortalPage() {
                     “{request.garage_response_note}”
                   </p>
                 )}
+                <AcceptedJobActions
+                  requestId={request.id}
+                  currentDate={request.scheduled_date}
+                  currentTime={request.scheduled_time}
+                  defaultNotes={request.notes}
+                />
                 <WorkRequestThread
                   workRequestId={request.id}
                   viewerRole="garage"

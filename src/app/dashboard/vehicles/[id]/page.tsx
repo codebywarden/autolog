@@ -53,7 +53,7 @@ interface WorkRequestRow {
   preferred_date: string | null;
   scheduled_date: string | null;
   scheduled_time: string | null;
-  status: "pending" | "accepted" | "declined" | "cancelled";
+  status: "pending" | "accepted" | "declined" | "cancelled" | "completed";
   garage_response_note: string | null;
   created_at: string;
   garage: { name: string } | null;
@@ -123,6 +123,8 @@ function describeActivity(row: ActivityLogRow): string {
       return `${row.actor_label} accepted a work request`;
     case "work_declined":
       return `${row.actor_label} declined a work request`;
+    case "work_cancelled_by_garage":
+      return `${row.actor_label} cancelled a booked appointment`;
     case "garage_access_granted":
       return `${row.actor_label} was granted access`;
     case "garage_access_revoked": {
