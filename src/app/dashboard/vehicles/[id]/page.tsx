@@ -418,18 +418,25 @@ export default async function VehiclePage({
         </p>
       )}
 
+      <Link
+        href={`/dashboard/vehicles/${id}/add-entry`}
+        className={buttonStyles("primary")}
+      >
+        Add service entry
+      </Link>
+
       <div className="flex gap-2">
-        <Link
-          href={`/dashboard/vehicles/${id}/add-entry`}
-          className={buttonStyles("primary", "flex-1")}
-        >
-          Add service entry
-        </Link>
         <a
           href={`/api/vehicles/${id}/export`}
           className={buttonStyles("secondary", "flex-1")}
         >
-          Export PDF
+          Full export (PDF)
+        </a>
+        <a
+          href={`/api/vehicles/${id}/factsheet`}
+          className={buttonStyles("secondary", "flex-1")}
+        >
+          Vehicle factsheet (PDF)
         </a>
       </div>
 
