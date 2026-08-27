@@ -27,6 +27,7 @@ import { ShareLinkList } from "./share-link-list";
 import { TransferPanel } from "./transfer-panel";
 import { TransferCodeList } from "./transfer-code-list";
 import { MotCostField } from "./mot-cost-field";
+import { DeleteEntryButton } from "./delete-entry-button";
 
 interface GarageAccessRow {
   id: string;
@@ -59,6 +60,7 @@ interface AttachmentLink {
   fileName: string;
   url: string | null;
   attachmentType: string;
+  storagePath: string;
 }
 
 interface ActivityLogRow {
@@ -163,6 +165,7 @@ export default async function VehiclePage({
       fileName: attachment.file_name ?? "Attachment",
       url: signed?.signedUrl ?? null,
       attachmentType: attachment.attachment_type,
+      storagePath: attachment.storage_path,
     });
     attachmentsByEntry.set(attachment.service_entry_id, list);
   }
@@ -432,6 +435,22 @@ export default async function VehiclePage({
                         📎 {ATTACHMENT_TYPE_LABELS[attachment.attachmentType] ?? "Attachment"}: {attachment.fileName} (link unavailable)
                       </p>
                     ),
+                )}
+                {!item.entry.verified && (
+                  <div className="mt-2 flex gap-3 text-xs font-medium">
+                    <Link
+                      href={`/dashboard/vehicles/${id}/entries/${item.entry.id}/edit`}
+                      className="text-primary underline underline-offset-2 hover:text-primary-hover"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteEntryButton
+                      entryId={item.entry.id}
+                      attachmentPaths={(attachmentsByEntry.get(item.entry.id) ?? []).map(
+                        (attachment) => attachment.storagePath,
+                      )}
+                    />
+                  </div>
                 )}
               </li>
             ),
