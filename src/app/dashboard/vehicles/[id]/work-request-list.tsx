@@ -45,7 +45,16 @@ export function WorkRequestList({
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleCancel(requestId: string) {
+  async function handleCancel(requestId: string, wasAccepted: boolean) {
+    if (
+      wasAccepted &&
+      !confirm(
+        "Cancel this appointment? The garage has already confirmed this booking.",
+      )
+    ) {
+      return;
+    }
+
     setCancellingId(requestId);
     setError(null);
 
@@ -100,14 +109,18 @@ export function WorkRequestList({
               “{request.garageResponseNote}”
             </p>
           )}
-          {request.status === "pending" && (
+          {(request.status === "pending" || request.status === "accepted") && (
             <button
               type="button"
-              onClick={() => handleCancel(request.id)}
+              onClick={() => handleCancel(request.id, request.status === "accepted")}
               disabled={cancellingId === request.id}
               className="mt-1 text-xs font-medium text-critical underline underline-offset-2 disabled:opacity-50"
             >
-              {cancellingId === request.id ? "Cancelling…" : "Cancel request"}
+              {cancellingId === request.id
+                ? "Cancelling…"
+                : request.status === "accepted"
+                  ? "Cancel appointment"
+                  : "Cancel request"}
             </button>
           )}
           <WorkRequestThread

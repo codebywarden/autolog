@@ -125,6 +125,8 @@ function describeActivity(row: ActivityLogRow): string {
       return `${row.actor_label} declined a work request`;
     case "work_cancelled_by_garage":
       return `${row.actor_label} cancelled a booked appointment`;
+    case "work_cancelled_by_owner":
+      return `${row.actor_label} cancelled a booked appointment`;
     case "garage_access_granted":
       return `${row.actor_label} was granted access`;
     case "garage_access_revoked": {
