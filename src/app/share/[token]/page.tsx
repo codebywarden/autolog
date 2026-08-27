@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Wordmark } from "@/components/wordmark";
+import { Logo } from "@/components/logo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildTimeline,
@@ -65,7 +65,7 @@ export default async function SharePage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
-      <Wordmark className="text-2xl" />
+      <Logo variant="compact" className="h-9" priority />
 
       <div className="flex items-center gap-2 rounded-xl border border-success/25 bg-success-bg px-4 py-3 text-sm font-medium text-success">
         <span aria-hidden>✓</span>

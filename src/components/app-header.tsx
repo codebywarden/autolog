@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wordmark } from "@/components/wordmark";
+import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 
 // "Add" and "Receive" are actions within the My vehicles page, not
@@ -39,7 +39,7 @@ export function AppHeader() {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           onClick={() => setOpen(false)}
         >
-          <Wordmark className="text-4xl" />
+          <Logo variant="compact" className="h-10" priority />
         </Link>
 
         <button

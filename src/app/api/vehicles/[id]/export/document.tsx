@@ -1,5 +1,24 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import fs from "node:fs";
+import path from "node:path";
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { TimelineItem } from "@/lib/timeline";
+
+// Cached across invocations within the same server process — the logo
+// file never changes at runtime, so there's no reason to re-read and
+// re-encode it on every export request.
+let cachedLogoDataUri: string | null = null;
+
+function getLogoDataUri(): string {
+  if (!cachedLogoDataUri) {
+    const filePath = path.join(
+      process.cwd(),
+      "src/assets/motor360-logo-compact.png",
+    );
+    const base64 = fs.readFileSync(filePath).toString("base64");
+    cachedLogoDataUri = `data:image/png;base64,${base64}`;
+  }
+  return cachedLogoDataUri;
+}
 
 interface VehicleInfo {
   vrm: string;
@@ -17,8 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "Helvetica",
   },
-  wordmark: { fontSize: 14, fontFamily: "Helvetica-Bold", marginBottom: 16 },
-  wordmarkAccent: { color: "#1E4FD8" },
+  logo: { width: 110, height: 26.1, marginBottom: 16 },
   title: { fontSize: 18, marginBottom: 4 },
   subtitle: { fontSize: 11, color: "#555555", marginBottom: 20 },
   row: {
@@ -62,9 +80,7 @@ export function VehicleHistoryDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.wordmark}>
-          Motor<Text style={styles.wordmarkAccent}>360</Text>
-        </Text>
+        <Image src={getLogoDataUri()} style={styles.logo} />
         <Text style={styles.title}>{vehicle.vrm}</Text>
         <Text style={styles.subtitle}>
           {[vehicle.make, vehicle.model, vehicle.colour, vehicle.fuel_type]
