@@ -44,6 +44,15 @@ interface PendingWorkRequestRow {
   vehicle: { id: string; vrm: string } | null;
 }
 
+interface AcceptedWorkRequestRow {
+  id: string;
+  notes: string;
+  scheduled_date: string | null;
+  contact_info: string | null;
+  garage_response_note: string | null;
+  vehicle: { id: string; vrm: string } | null;
+}
+
 interface WorkRequestMessageRow {
   id: string;
   work_request_id: string;
@@ -128,13 +137,31 @@ export default async function GaragePortalPage() {
 
   const pendingWorkRequests = pendingWorkRequestRows ?? [];
 
-  const pendingWorkRequestIds = pendingWorkRequests.map((request) => request.id);
+  // Soonest-scheduled first; anything still awaiting a date (accepted
+  // without one set) sinks to the bottom rather than sorting as if it
+  // were the most urgent.
+  const { data: acceptedWorkRequestRows } = await supabase
+    .from("work_requests")
+    .select(
+      "id, notes, scheduled_date, contact_info, garage_response_note, vehicle:vehicles(id, vrm)",
+    )
+    .eq("garage_id", garage.id)
+    .eq("status", "accepted")
+    .order("scheduled_date", { ascending: true, nullsFirst: false })
+    .returns<AcceptedWorkRequestRow[]>();
+
+  const acceptedWorkRequests = acceptedWorkRequestRows ?? [];
+
+  const workRequestIdsNeedingMessages = [
+    ...pendingWorkRequests.map((request) => request.id),
+    ...acceptedWorkRequests.map((request) => request.id),
+  ];
   const { data: workRequestMessageRows } =
-    pendingWorkRequestIds.length > 0
+    workRequestIdsNeedingMessages.length > 0
       ? await supabase
           .from("work_request_messages")
           .select("id, work_request_id, sender_role, sender_label, body, created_at")
-          .in("work_request_id", pendingWorkRequestIds)
+          .in("work_request_id", workRequestIdsNeedingMessages)
           .order("created_at", { ascending: true })
           .returns<WorkRequestMessageRow[]>()
       : { data: [] as WorkRequestMessageRow[] };
@@ -228,6 +255,47 @@ export default async function GaragePortalPage() {
                   </p>
                 )}
                 <WorkRequestActions requestId={request.id} />
+                <WorkRequestThread
+                  workRequestId={request.id}
+                  viewerRole="garage"
+                  senderLabel={garage.name}
+                  initialMessages={messagesByWorkRequest.get(request.id) ?? []}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {acceptedWorkRequests.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Accepted jobs
+          </p>
+          <ul className="flex flex-col gap-2.5">
+            {acceptedWorkRequests.map((request) => (
+              <li key={request.id} className={cardStyles("text-sm")}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm font-semibold tracking-wide text-foreground">
+                    {request.vehicle?.vrm ?? "Unknown vehicle"}
+                  </span>
+                  {request.scheduled_date && (
+                    <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+                      {request.scheduled_date}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-foreground">{request.notes}</p>
+                {request.contact_info && (
+                  <p className="text-muted-foreground">
+                    Contact: {request.contact_info}
+                  </p>
+                )}
+                {request.garage_response_note && (
+                  <p className="text-muted-foreground">
+                    “{request.garage_response_note}”
+                  </p>
+                )}
                 <WorkRequestThread
                   workRequestId={request.id}
                   viewerRole="garage"
