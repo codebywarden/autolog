@@ -7,9 +7,10 @@ import { RedeemCodeForm } from "./redeem-code-form";
 import { VerificationRequestActions } from "./verification-request-actions";
 import { WorkRequestActions } from "./work-request-actions";
 import { WorkRequestThread, type WorkRequestMessage } from "@/components/work-request-thread";
+import { CalendarFeedPanel } from "./calendar-feed-panel";
 
 interface GarageMembership {
-  garage: { id: string; name: string } | null;
+  garage: { id: string; name: string; calendar_feed_token: string } | null;
 }
 
 interface GarageVehicleRow {
@@ -48,6 +49,7 @@ interface AcceptedWorkRequestRow {
   id: string;
   notes: string;
   scheduled_date: string | null;
+  scheduled_time: string | null;
   contact_info: string | null;
   garage_response_note: string | null;
   vehicle: { id: string; vrm: string } | null;
@@ -74,7 +76,7 @@ export default async function GaragePortalPage() {
 
   const { data: memberships } = await supabase
     .from("garage_members")
-    .select("garage:garages(id, name)")
+    .select("garage:garages(id, name, calendar_feed_token)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })
     .returns<GarageMembership[]>();
@@ -143,7 +145,7 @@ export default async function GaragePortalPage() {
   const { data: acceptedWorkRequestRows } = await supabase
     .from("work_requests")
     .select(
-      "id, notes, scheduled_date, contact_info, garage_response_note, vehicle:vehicles(id, vrm)",
+      "id, notes, scheduled_date, scheduled_time, contact_info, garage_response_note, vehicle:vehicles(id, vrm)",
     )
     .eq("garage_id", garage.id)
     .eq("status", "accepted")
@@ -195,6 +197,8 @@ export default async function GaragePortalPage() {
       </div>
 
       <RedeemCodeForm />
+
+      <CalendarFeedPanel garageId={garage.id} feedToken={garage.calendar_feed_token} />
 
       {pendingRequests.length > 0 && (
         <div className="flex flex-col gap-2.5">
@@ -282,6 +286,7 @@ export default async function GaragePortalPage() {
                   {request.scheduled_date && (
                     <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
                       {request.scheduled_date}
+                      {request.scheduled_time && ` · ${request.scheduled_time.slice(0, 5)}`}
                     </span>
                   )}
                 </div>

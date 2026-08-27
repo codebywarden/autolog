@@ -11,6 +11,7 @@ interface WorkRequest {
   notes: string;
   preferredDate: string | null;
   scheduledDate: string | null;
+  scheduledTime: string | null;
   status: "pending" | "accepted" | "declined" | "cancelled";
   garageResponseNote: string | null;
   garageName: string;
@@ -87,7 +88,10 @@ export function WorkRequestList({
             </p>
           )}
           {request.status === "accepted" && request.scheduledDate && (
-            <p className="text-success">Scheduled: {request.scheduledDate}</p>
+            <p className="text-success">
+              Scheduled: {request.scheduledDate}
+              {request.scheduledTime && ` at ${request.scheduledTime.slice(0, 5)}`}
+            </p>
           )}
           {request.garageResponseNote && (
             <p className="text-muted-foreground">

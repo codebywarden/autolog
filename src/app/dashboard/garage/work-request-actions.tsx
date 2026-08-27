@@ -10,6 +10,7 @@ export function WorkRequestActions({ requestId }: { requestId: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<"idle" | "accepting" | "declining">("idle");
   const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
   const [responseNote, setResponseNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,8 @@ export function WorkRequestActions({ requestId }: { requestId: string }) {
       .update({
         status,
         scheduled_date: status === "accepted" ? scheduledDate || null : null,
+        scheduled_time:
+          status === "accepted" ? scheduledTime || null : null,
         garage_response_note: responseNote || null,
         decided_by: user?.id,
         decided_at: new Date().toISOString(),
@@ -68,13 +71,22 @@ export function WorkRequestActions({ requestId }: { requestId: string }) {
   return (
     <div className="mt-2 flex flex-col gap-2">
       {mode === "accepting" && (
-        <Field label="Scheduled date (optional)">
-          <TextInput
-            type="date"
-            value={scheduledDate}
-            onChange={(event) => setScheduledDate(event.target.value)}
-          />
-        </Field>
+        <div className="flex gap-2">
+          <Field label="Scheduled date (optional)">
+            <TextInput
+              type="date"
+              value={scheduledDate}
+              onChange={(event) => setScheduledDate(event.target.value)}
+            />
+          </Field>
+          <Field label="Time (optional)">
+            <TextInput
+              type="time"
+              value={scheduledTime}
+              onChange={(event) => setScheduledTime(event.target.value)}
+            />
+          </Field>
+        </div>
       )}
       <Field label="Note to the customer (optional)">
         <Textarea

@@ -52,6 +52,7 @@ interface WorkRequestRow {
   notes: string;
   preferred_date: string | null;
   scheduled_date: string | null;
+  scheduled_time: string | null;
   status: "pending" | "accepted" | "declined" | "cancelled";
   garage_response_note: string | null;
   created_at: string;
@@ -293,7 +294,7 @@ export default async function VehiclePage({
   const { data: workRequestRows } = await supabase
     .from("work_requests")
     .select(
-      "id, notes, preferred_date, scheduled_date, status, garage_response_note, created_at, garage:garages(name)",
+      "id, notes, preferred_date, scheduled_date, scheduled_time, status, garage_response_note, created_at, garage:garages(name)",
     )
     .eq("vehicle_id", id)
     .order("created_at", { ascending: false })
@@ -322,6 +323,7 @@ export default async function VehiclePage({
     notes: row.notes,
     preferredDate: row.preferred_date,
     scheduledDate: row.scheduled_date,
+    scheduledTime: row.scheduled_time,
     status: row.status,
     garageResponseNote: row.garage_response_note,
     garageName: row.garage?.name ?? "the garage",
