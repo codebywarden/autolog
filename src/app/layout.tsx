@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoLog",
+  title: "Motor360",
   description: "Your vehicle's service history, verified and in one place.",
 };
 

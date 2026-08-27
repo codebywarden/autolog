@@ -1,6 +1,5 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import logo from "@/assets/logo.png";
+import { Wordmark } from "@/components/wordmark";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildTimeline,
@@ -66,11 +65,11 @@ export default async function SharePage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-6">
-      <Image src={logo} alt="AutoLog" className="h-auto w-32" />
+      <Wordmark className="text-2xl" />
 
       <div className="flex items-center gap-2 rounded-xl border border-success/25 bg-success-bg px-4 py-3 text-sm font-medium text-success">
         <span aria-hidden>✓</span>
-        Verified AutoLog history — shared read-only. Invoice attachments
+        Verified Motor360 history — shared read-only. Invoice attachments
         aren&apos;t included.
       </div>
 

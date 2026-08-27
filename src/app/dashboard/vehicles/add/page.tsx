@@ -164,7 +164,7 @@ export default function AddVehiclePage() {
               disabled={step === "saving"}
               className={buttonStyles("primary")}
             >
-              {step === "saving" ? "Adding…" : "Add to AutoLog"}
+              {step === "saving" ? "Adding…" : "Add to Motor360"}
             </button>
           </div>
         </div>

@@ -83,7 +83,7 @@ export function SharePanel({ vehicleId }: { vehicleId: string }) {
       <p className="font-semibold text-foreground">Share history</p>
       <p className="mt-1 text-muted-foreground">
         Generate a read-only link to send to a buyer or dealer — no
-        AutoLog account needed to view it. Invoice attachments aren&apos;t
+        Motor360 account needed to view it. Invoice attachments aren&apos;t
         included. Links expire after 14 days.
       </p>
       <button

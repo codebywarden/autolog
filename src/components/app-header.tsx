@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import logo from "@/assets/logo.png";
+import { Wordmark } from "@/components/wordmark";
 import { createClient } from "@/lib/supabase/client";
 
 // "Add" and "Receive" are actions within the My vehicles page, not
@@ -40,7 +39,7 @@ export function AppHeader() {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           onClick={() => setOpen(false)}
         >
-          <Image src={logo} alt="AutoLog" className="h-28 w-auto" priority />
+          <Wordmark className="text-4xl" />
         </Link>
 
         <button

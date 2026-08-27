@@ -72,13 +72,13 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!existingOwnership) {
-      // Someone else currently owns this vehicle in AutoLog — refuse
+      // Someone else currently owns this vehicle in Motor360 — refuse
       // rather than silently taking over their record. Ask the current
       // owner to use the transfer flow instead of adding it directly.
       return NextResponse.json(
         {
           error:
-            "This vehicle is already registered by another AutoLog account. Ask the current owner to transfer it to you from their vehicle page instead.",
+            "This vehicle is already registered by another Motor360 account. Ask the current owner to transfer it to you from their vehicle page instead.",
         },
         { status: 409 },
       );
