@@ -59,8 +59,10 @@ export async function GET(
 
   const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
 
+  // showCost: false — a public share link is meant for verifying history
+  // (MOT results, service dates), not for disclosing what the owner paid.
   const pdfBuffer = await renderToBuffer(
-    VehicleHistoryDocument({ vehicle, timeline }),
+    VehicleHistoryDocument({ vehicle, timeline, showCost: false }),
   );
 
   return new NextResponse(new Uint8Array(pdfBuffer), {

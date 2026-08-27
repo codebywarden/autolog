@@ -71,9 +71,11 @@ const styles = StyleSheet.create({
 export function VehicleHistoryDocument({
   vehicle,
   timeline,
+  showCost,
 }: {
   vehicle: VehicleInfo;
   timeline: TimelineItem[];
+  showCost: boolean;
 }) {
   const generatedAt = new Date().toISOString().slice(0, 10);
 
@@ -112,6 +114,11 @@ export function VehicleHistoryDocument({
                       {item.entry.odometer_unit}
                     </Text>
                   )}
+                  {showCost && item.entry.cost != null && (
+                    <Text style={styles.meta}>
+                      £{item.entry.cost.toFixed(2)}
+                    </Text>
+                  )}
                   {(item.entry.raw_data?.defects ?? []).map((defect, index) => (
                     <Text key={index} style={styles.meta}>
                       • [{defect.type}] {defect.text}
@@ -131,6 +138,11 @@ export function VehicleHistoryDocument({
                   {item.entry.mileage != null && (
                     <Text style={styles.meta}>
                       {item.entry.mileage.toLocaleString()} mi
+                    </Text>
+                  )}
+                  {showCost && item.entry.cost != null && (
+                    <Text style={styles.meta}>
+                      £{item.entry.cost.toFixed(2)}
                     </Text>
                   )}
                   {item.entry.garage_name && (

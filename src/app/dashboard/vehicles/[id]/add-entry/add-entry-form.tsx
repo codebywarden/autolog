@@ -45,6 +45,7 @@ export function AddEntryForm({
   const [mileage, setMileage] = useState("");
   const [serviceType, setServiceType] =
     useState<(typeof SERVICE_TYPES)[number]>("service");
+  const [cost, setCost] = useState("");
   const [garageName, setGarageName] = useState("");
   const [notes, setNotes] = useState("");
   const [resolvesKey, setResolvesKey] = useState("");
@@ -83,6 +84,7 @@ export function AddEntryForm({
           entry_date: entryDate,
           mileage: mileage ? Number(mileage) : null,
           service_type: serviceType,
+          cost: cost ? Number(cost) : null,
           garage_name: garageName || null,
           notes: notes || null,
           resolved_mot_history_id: resolvedMotHistoryId,
@@ -182,6 +184,18 @@ export function AddEntryForm({
               </option>
             ))}
           </Select>
+        </Field>
+
+        <Field label="Cost (£)">
+          <TextInput
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={cost}
+            onChange={(event) => setCost(event.target.value)}
+            placeholder="e.g. 189.99"
+          />
         </Field>
 
         <Field label="Garage">

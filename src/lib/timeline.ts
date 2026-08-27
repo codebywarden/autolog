@@ -6,6 +6,7 @@ export interface ServiceEntry {
   garage_name: string | null;
   notes: string | null;
   verified: boolean;
+  cost: number | null;
   resolved_mot_history_id?: string | null;
   resolved_defect_index?: number | null;
 }
@@ -25,6 +26,7 @@ export interface MotHistoryRow {
   odometer_value: number | null;
   odometer_unit: string | null;
   raw_data: { defects?: MotDefect[] } | null;
+  cost: number | null;
 }
 
 export type TimelineItem =

@@ -38,7 +38,7 @@ export async function GET(
     supabase
       .from("service_entries")
       .select(
-        "id, entry_date, mileage, service_type, garage_name, notes, verified",
+        "id, entry_date, mileage, service_type, garage_name, notes, verified, cost",
       )
       .eq("vehicle_id", id)
       .order("entry_date", { ascending: false })
@@ -46,7 +46,7 @@ export async function GET(
     supabase
       .from("mot_history")
       .select(
-        "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data",
+        "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data, cost",
       )
       .eq("vehicle_id", id)
       .order("completed_at", { ascending: false })
@@ -56,7 +56,7 @@ export async function GET(
   const timeline = buildTimeline(serviceEntries ?? [], motHistory ?? []);
 
   const pdfBuffer = await renderToBuffer(
-    VehicleHistoryDocument({ vehicle, timeline }),
+    VehicleHistoryDocument({ vehicle, timeline, showCost: true }),
   );
 
   return new NextResponse(new Uint8Array(pdfBuffer), {

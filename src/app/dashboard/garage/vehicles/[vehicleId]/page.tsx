@@ -69,7 +69,7 @@ export default async function GarageVehiclePage({
       supabase
         .from("service_entries")
         .select(
-          "id, entry_date, mileage, service_type, garage_name, notes, verified, resolved_mot_history_id, resolved_defect_index",
+          "id, entry_date, mileage, service_type, garage_name, notes, verified, cost, resolved_mot_history_id, resolved_defect_index",
         )
         .eq("vehicle_id", vehicleId)
         .order("entry_date", { ascending: false })
@@ -77,7 +77,7 @@ export default async function GarageVehiclePage({
       supabase
         .from("mot_history")
         .select(
-          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data",
+          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data, cost",
         )
         .eq("vehicle_id", vehicleId)
         .order("completed_at", { ascending: false })
@@ -178,6 +178,11 @@ export default async function GarageVehiclePage({
                     {item.entry.odometer_unit}
                   </p>
                 )}
+                {item.entry.cost != null && (
+                  <p className="text-muted-foreground">
+                    £{item.entry.cost.toFixed(2)}
+                  </p>
+                )}
                 {(item.entry.raw_data?.defects?.length ?? 0) > 0 && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-muted-foreground">
@@ -239,6 +244,11 @@ export default async function GarageVehiclePage({
                 {item.entry.mileage != null && (
                   <p className="text-muted-foreground">
                     {item.entry.mileage.toLocaleString()} mi
+                  </p>
+                )}
+                {item.entry.cost != null && (
+                  <p className="text-muted-foreground">
+                    £{item.entry.cost.toFixed(2)}
                   </p>
                 )}
                 {item.entry.garage_name && (

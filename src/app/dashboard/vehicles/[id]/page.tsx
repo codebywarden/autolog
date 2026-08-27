@@ -26,6 +26,7 @@ import { SharePanel } from "./share-panel";
 import { ShareLinkList } from "./share-link-list";
 import { TransferPanel } from "./transfer-panel";
 import { TransferCodeList } from "./transfer-code-list";
+import { MotCostField } from "./mot-cost-field";
 
 interface GarageAccessRow {
   id: string;
@@ -125,7 +126,7 @@ export default async function VehiclePage({
       supabase
         .from("service_entries")
         .select(
-          "id, entry_date, mileage, service_type, garage_name, notes, verified, resolved_mot_history_id, resolved_defect_index",
+          "id, entry_date, mileage, service_type, garage_name, notes, verified, cost, resolved_mot_history_id, resolved_defect_index",
         )
         .eq("vehicle_id", id)
         .order("entry_date", { ascending: false })
@@ -133,7 +134,7 @@ export default async function VehiclePage({
       supabase
         .from("mot_history")
         .select(
-          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data",
+          "id, test_date, completed_at, expiry_date, result, odometer_value, odometer_unit, raw_data, cost",
         )
         .eq("vehicle_id", id)
         .order("completed_at", { ascending: false })
@@ -334,6 +335,9 @@ export default async function VehiclePage({
                     {item.entry.odometer_unit}
                   </p>
                 )}
+                <p className="mt-0.5">
+                  <MotCostField motHistoryId={item.entry.id} cost={item.entry.cost} />
+                </p>
                 {(item.entry.raw_data?.defects?.length ?? 0) > 0 && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-muted-foreground">
@@ -395,6 +399,11 @@ export default async function VehiclePage({
                 {item.entry.mileage != null && (
                   <p className="text-muted-foreground">
                     {item.entry.mileage.toLocaleString()} mi
+                  </p>
+                )}
+                {item.entry.cost != null && (
+                  <p className="text-muted-foreground">
+                    £{item.entry.cost.toFixed(2)}
                   </p>
                 )}
                 {item.entry.garage_name && (
