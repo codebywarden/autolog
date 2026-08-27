@@ -8,6 +8,7 @@ import {
 } from "@/lib/reminders";
 import {
   buildTimeline,
+  buildResolvableDefects,
   type ServiceEntry,
   type MotHistoryRow,
 } from "@/lib/timeline";
@@ -29,6 +30,8 @@ import { TransferCodeList } from "./transfer-code-list";
 import { MotCostField } from "./mot-cost-field";
 import { DeleteEntryButton } from "./delete-entry-button";
 import { RequestVerificationControl } from "./request-verification-control";
+import { RequestWorkPanel } from "./request-work-panel";
+import { WorkRequestList } from "./work-request-list";
 
 interface GarageAccessRow {
   id: string;
@@ -42,6 +45,17 @@ interface VerificationRequestRow {
   status: "pending" | "approved" | "declined" | "cancelled";
   garage: { name: string } | null;
   created_at: string;
+}
+
+interface WorkRequestRow {
+  id: string;
+  notes: string;
+  preferred_date: string | null;
+  scheduled_date: string | null;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  garage_response_note: string | null;
+  created_at: string;
+  garage: { name: string } | null;
 }
 
 interface ShareLinkRow {
@@ -93,6 +107,12 @@ function describeActivity(row: ActivityLogRow): string {
       return `${row.actor_label} verified a service entry`;
     case "verification_declined":
       return `${row.actor_label} declined to verify a service entry`;
+    case "work_requested":
+      return `${row.actor_label} requested work from a garage`;
+    case "work_accepted":
+      return `${row.actor_label} accepted a work request`;
+    case "work_declined":
+      return `${row.actor_label} declined a work request`;
     case "garage_access_granted":
       return `${row.actor_label} was granted access`;
     case "garage_access_revoked": {
@@ -222,6 +242,11 @@ export default async function VehiclePage({
     return defect ? `Resolves: ${defect.text}` : null;
   }
 
+  const resolvableDefects = buildResolvableDefects(
+    motHistory ?? [],
+    resolvedDefectKeys,
+  );
+
   const { data: accessGrants } = await supabase
     .from("vehicle_garage_access")
     .select("id, garage_id, garage:garages(name)")
@@ -255,6 +280,25 @@ export default async function VehiclePage({
       latestVerificationRequestByEntry.set(row.service_entry_id, row);
     }
   }
+
+  const { data: workRequestRows } = await supabase
+    .from("work_requests")
+    .select(
+      "id, notes, preferred_date, scheduled_date, status, garage_response_note, created_at, garage:garages(name)",
+    )
+    .eq("vehicle_id", id)
+    .order("created_at", { ascending: false })
+    .returns<WorkRequestRow[]>();
+
+  const workRequests = (workRequestRows ?? []).map((row) => ({
+    id: row.id,
+    notes: row.notes,
+    preferredDate: row.preferred_date,
+    scheduledDate: row.scheduled_date,
+    status: row.status,
+    garageResponseNote: row.garage_response_note,
+    garageName: row.garage?.name ?? "the garage",
+  }));
 
   const { data: shareLinkRows } = await supabase
     .from("vehicle_share_links")
@@ -530,6 +574,22 @@ export default async function VehiclePage({
             ))}
           </ul>
         </details>
+      )}
+
+      {(connectedGarages.length > 0 || workRequests.length > 0) && (
+        <div className="mt-4 flex flex-col gap-3 border-t border-border pt-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Book work
+          </p>
+          {connectedGarages.length > 0 && (
+            <RequestWorkPanel
+              vehicleId={id}
+              connectedGarages={connectedGarages}
+              resolvableDefects={resolvableDefects}
+            />
+          )}
+          <WorkRequestList requests={workRequests} />
+        </div>
       )}
 
       <div className="mt-4 flex flex-col gap-3 border-t border-border pt-5">

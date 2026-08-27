@@ -5,6 +5,7 @@ import { cardStyles } from "@/components/ui/styles";
 import { CreateGarageForm } from "./create-garage-form";
 import { RedeemCodeForm } from "./redeem-code-form";
 import { VerificationRequestActions } from "./verification-request-actions";
+import { WorkRequestActions } from "./work-request-actions";
 
 interface GarageMembership {
   garage: { id: string; name: string } | null;
@@ -31,6 +32,14 @@ interface PendingVerificationRequestRow {
     mileage: number | null;
     notes: string | null;
   } | null;
+}
+
+interface PendingWorkRequestRow {
+  id: string;
+  notes: string;
+  preferred_date: string | null;
+  created_at: string;
+  vehicle: { id: string; vrm: string } | null;
 }
 
 export default async function GaragePortalPage() {
@@ -96,6 +105,16 @@ export default async function GaragePortalPage() {
 
   const pendingRequests = pendingRequestRows ?? [];
 
+  const { data: pendingWorkRequestRows } = await supabase
+    .from("work_requests")
+    .select("id, notes, preferred_date, created_at, vehicle:vehicles(id, vrm)")
+    .eq("garage_id", garage.id)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .returns<PendingWorkRequestRow[]>();
+
+  const pendingWorkRequests = pendingWorkRequestRows ?? [];
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
       <Link
@@ -143,6 +162,30 @@ export default async function GaragePortalPage() {
                   </>
                 )}
                 <VerificationRequestActions requestId={request.id} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {pendingWorkRequests.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Work requests
+          </p>
+          <ul className="flex flex-col gap-2.5">
+            {pendingWorkRequests.map((request) => (
+              <li key={request.id} className={cardStyles("text-sm")}>
+                <p className="font-mono text-sm font-semibold tracking-wide text-foreground">
+                  {request.vehicle?.vrm ?? "Unknown vehicle"}
+                </p>
+                <p className="mt-0.5 text-foreground">{request.notes}</p>
+                {request.preferred_date && (
+                  <p className="text-muted-foreground">
+                    Preferred: {request.preferred_date}
+                  </p>
+                )}
+                <WorkRequestActions requestId={request.id} />
               </li>
             ))}
           </ul>
