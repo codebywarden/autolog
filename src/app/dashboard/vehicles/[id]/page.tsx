@@ -28,10 +28,20 @@ import { TransferPanel } from "./transfer-panel";
 import { TransferCodeList } from "./transfer-code-list";
 import { MotCostField } from "./mot-cost-field";
 import { DeleteEntryButton } from "./delete-entry-button";
+import { RequestVerificationControl } from "./request-verification-control";
 
 interface GarageAccessRow {
   id: string;
+  garage_id: string;
   garage: { name: string } | null;
+}
+
+interface VerificationRequestRow {
+  id: string;
+  service_entry_id: string;
+  status: "pending" | "approved" | "declined" | "cancelled";
+  garage: { name: string } | null;
+  created_at: string;
 }
 
 interface ShareLinkRow {
@@ -79,6 +89,10 @@ function describeActivity(row: ActivityLogRow): string {
       return `${row.actor_label} added a service entry`;
     case "verified_entry_added":
       return `${row.actor_label} added a verified service entry`;
+    case "verification_approved":
+      return `${row.actor_label} verified a service entry`;
+    case "verification_declined":
+      return `${row.actor_label} declined to verify a service entry`;
     case "garage_access_granted":
       return `${row.actor_label} was granted access`;
     case "garage_access_revoked": {
@@ -210,7 +224,7 @@ export default async function VehiclePage({
 
   const { data: accessGrants } = await supabase
     .from("vehicle_garage_access")
-    .select("id, garage:garages(name)")
+    .select("id, garage_id, garage:garages(name)")
     .eq("vehicle_id", id)
     .is("revoked_at", null)
     .returns<GarageAccessRow[]>();
@@ -218,6 +232,29 @@ export default async function VehiclePage({
   const garageAccessGrants = (accessGrants ?? [])
     .filter((row) => row.garage !== null)
     .map((row) => ({ id: row.id, garageName: row.garage!.name }));
+
+  const connectedGarages = (accessGrants ?? [])
+    .filter((row) => row.garage !== null)
+    .map((row) => ({ garageId: row.garage_id, garageName: row.garage!.name }));
+
+  const { data: verificationRequestRows } = await supabase
+    .from("entry_verification_requests")
+    .select("id, service_entry_id, status, created_at, garage:garages(name)")
+    .eq("vehicle_id", id)
+    .order("created_at", { ascending: false })
+    .returns<VerificationRequestRow[]>();
+
+  // Latest request per entry — rows are already newest-first, so the
+  // first one seen for a given entry is the one that matters.
+  const latestVerificationRequestByEntry = new Map<
+    string,
+    VerificationRequestRow
+  >();
+  for (const row of verificationRequestRows ?? []) {
+    if (!latestVerificationRequestByEntry.has(row.service_entry_id)) {
+      latestVerificationRequestByEntry.set(row.service_entry_id, row);
+    }
+  }
 
   const { data: shareLinkRows } = await supabase
     .from("vehicle_share_links")
@@ -437,20 +474,39 @@ export default async function VehiclePage({
                     ),
                 )}
                 {!item.entry.verified && (
-                  <div className="mt-2 flex gap-3 text-xs font-medium">
-                    <Link
-                      href={`/dashboard/vehicles/${id}/entries/${item.entry.id}/edit`}
-                      className="text-primary underline underline-offset-2 hover:text-primary-hover"
-                    >
-                      Edit
-                    </Link>
-                    <DeleteEntryButton
+                  <>
+                    <div className="mt-2 flex gap-3 text-xs font-medium">
+                      <Link
+                        href={`/dashboard/vehicles/${id}/entries/${item.entry.id}/edit`}
+                        className="text-primary underline underline-offset-2 hover:text-primary-hover"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteEntryButton
+                        entryId={item.entry.id}
+                        attachmentPaths={(attachmentsByEntry.get(item.entry.id) ?? []).map(
+                          (attachment) => attachment.storagePath,
+                        )}
+                      />
+                    </div>
+                    <RequestVerificationControl
+                      vehicleId={id}
                       entryId={item.entry.id}
-                      attachmentPaths={(attachmentsByEntry.get(item.entry.id) ?? []).map(
-                        (attachment) => attachment.storagePath,
-                      )}
+                      connectedGarages={connectedGarages}
+                      existingRequest={
+                        latestVerificationRequestByEntry.has(item.entry.id)
+                          ? {
+                              id: latestVerificationRequestByEntry.get(item.entry.id)!.id,
+                              status: latestVerificationRequestByEntry.get(item.entry.id)!
+                                .status,
+                              garageName:
+                                latestVerificationRequestByEntry.get(item.entry.id)!.garage
+                                  ?.name ?? "the garage",
+                            }
+                          : null
+                      }
                     />
-                  </div>
+                  </>
                 )}
               </li>
             ),

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cardStyles } from "@/components/ui/styles";
 import { CreateGarageForm } from "./create-garage-form";
 import { RedeemCodeForm } from "./redeem-code-form";
+import { VerificationRequestActions } from "./verification-request-actions";
 
 interface GarageMembership {
   garage: { id: string; name: string } | null;
@@ -17,6 +18,18 @@ interface GarageVehicleRow {
     make: string | null;
     model: string | null;
     colour: string | null;
+  } | null;
+}
+
+interface PendingVerificationRequestRow {
+  id: string;
+  created_at: string;
+  vehicle: { id: string; vrm: string } | null;
+  service_entry: {
+    entry_date: string;
+    service_type: string;
+    mileage: number | null;
+    notes: string | null;
   } | null;
 }
 
@@ -71,6 +84,18 @@ export default async function GaragePortalPage() {
     .map((row) => row.vehicle)
     .filter((vehicle) => vehicle !== null);
 
+  const { data: pendingRequestRows } = await supabase
+    .from("entry_verification_requests")
+    .select(
+      "id, created_at, vehicle:vehicles(id, vrm), service_entry:service_entries(entry_date, service_type, mileage, notes)",
+    )
+    .eq("garage_id", garage.id)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .returns<PendingVerificationRequestRow[]>();
+
+  const pendingRequests = pendingRequestRows ?? [];
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
       <Link
@@ -87,6 +112,42 @@ export default async function GaragePortalPage() {
       </div>
 
       <RedeemCodeForm />
+
+      {pendingRequests.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Verification requests
+          </p>
+          <ul className="flex flex-col gap-2.5">
+            {pendingRequests.map((request) => (
+              <li key={request.id} className={cardStyles("text-sm")}>
+                <p className="font-mono text-sm font-semibold tracking-wide text-foreground">
+                  {request.vehicle?.vrm ?? "Unknown vehicle"}
+                </p>
+                {request.service_entry && (
+                  <>
+                    <p className="mt-0.5 capitalize text-foreground">
+                      {request.service_entry.service_type} —{" "}
+                      {request.service_entry.entry_date}
+                    </p>
+                    {request.service_entry.mileage != null && (
+                      <p className="text-muted-foreground">
+                        {request.service_entry.mileage.toLocaleString()} mi
+                      </p>
+                    )}
+                    {request.service_entry.notes && (
+                      <p className="text-muted-foreground">
+                        {request.service_entry.notes}
+                      </p>
+                    )}
+                  </>
+                )}
+                <VerificationRequestActions requestId={request.id} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {vehicles.length === 0 ? (
         <p className={cardStyles("text-sm text-muted-foreground")}>
