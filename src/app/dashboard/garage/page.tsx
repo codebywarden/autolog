@@ -55,6 +55,8 @@ interface AcceptedWorkRequestRow {
   vehicle: { id: string; vrm: string } | null;
 }
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 interface WorkRequestMessageRow {
   id: string;
   work_request_id: string;
@@ -154,6 +156,28 @@ export default async function GaragePortalPage() {
 
   const acceptedWorkRequests = acceptedWorkRequestRows ?? [];
 
+  // A 7-day at-a-glance strip beats a full calendar grid here — the
+  // garage already has its own scheduling tool (see the calendar feed
+  // above); this is just "what's coming up," not a place to manage it.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekStrip = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() + i);
+    const iso = date.toISOString().slice(0, 10);
+    return {
+      iso,
+      weekday: WEEKDAY_LABELS[date.getDay()],
+      dayNumber: date.getDate(),
+      isToday: i === 0,
+      count: acceptedWorkRequests.filter((request) => request.scheduled_date === iso)
+        .length,
+    };
+  });
+  const todaysJobs = acceptedWorkRequests.filter(
+    (request) => request.scheduled_date === weekStrip[0].iso,
+  );
+
   const workRequestIdsNeedingMessages = [
     ...pendingWorkRequests.map((request) => request.id),
     ...acceptedWorkRequests.map((request) => request.id),
@@ -194,6 +218,66 @@ export default async function GaragePortalPage() {
           {garage.name}
         </h1>
         <p className="text-sm text-muted-foreground">Garage portal</p>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          This week
+        </p>
+        <div className="flex gap-1.5">
+          {weekStrip.map((day) => (
+            <div
+              key={day.iso}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-lg py-2 ${
+                day.isToday
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-surface text-foreground"
+              }`}
+            >
+              <span
+                className={`text-[10px] font-semibold uppercase ${
+                  day.isToday ? "text-primary-foreground/80" : "text-muted-foreground"
+                }`}
+              >
+                {day.weekday}
+              </span>
+              <span className="text-sm font-bold leading-none">{day.dayNumber}</span>
+              <span
+                className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold ${
+                  day.count === 0
+                    ? "text-transparent"
+                    : day.isToday
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-primary-tint text-primary"
+                }`}
+              >
+                {day.count || "·"}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {todaysJobs.length > 0 ? (
+          <ul className={cardStyles("flex flex-col divide-y divide-border p-0")}>
+            {todaysJobs.map((job) => (
+              <li key={job.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-mono font-semibold tracking-wide text-foreground">
+                    {job.vehicle?.vrm ?? "Unknown vehicle"}
+                  </p>
+                  <p className="truncate text-muted-foreground">{job.notes}</p>
+                </div>
+                {job.scheduled_time && (
+                  <span className="shrink-0 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+                    {job.scheduled_time.slice(0, 5)}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No jobs scheduled today.</p>
+        )}
       </div>
 
       <RedeemCodeForm />

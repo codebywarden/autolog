@@ -49,6 +49,32 @@ interface UnresolvedDefect {
   severity: DefectSeverity;
 }
 
+interface UpcomingWorkRow {
+  id: string;
+  vehicle_id: string;
+  notes: string;
+  scheduled_date: string;
+  scheduled_time: string | null;
+  garage: { name: string } | null;
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// "Today" / "Tomorrow" reads faster than a bare date for the handful of
+// appointments closest in time; further out, the date alone is clearer
+// than an escalating "in N days" count.
+function describeUpcomingDate(dateStr: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${dateStr}T00:00:00`);
+  const dayDiff = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+
+  if (dayDiff === 0) return "Today";
+  if (dayDiff === 1) return "Tomorrow";
+  if (dayDiff > 1 && dayDiff < 7) return WEEKDAY_LABELS[target.getDay()];
+  return dateStr;
+}
+
 // Matches the badge grouping already used on the vehicle pages —
 // MAJOR and DANGEROUS both read as "critical" there too.
 function severityOf(type: string): DefectSeverity {
@@ -101,6 +127,31 @@ export default async function InsightsPage() {
             .returns<ServiceRow[]>(),
         ])
       : [{ data: [] as MotRow[] }, { data: [] as ServiceRow[] }];
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const { data: upcomingWorkRows } =
+    vehicleIds.length > 0
+      ? await supabase
+          .from("work_requests")
+          .select("id, vehicle_id, notes, scheduled_date, scheduled_time, garage:garages(name)")
+          .in("vehicle_id", vehicleIds)
+          .eq("status", "accepted")
+          .gte("scheduled_date", todayIso)
+          .order("scheduled_date", { ascending: true })
+          .order("scheduled_time", { ascending: true, nullsFirst: true })
+          .limit(5)
+          .returns<UpcomingWorkRow[]>()
+      : { data: [] as UpcomingWorkRow[] };
+
+  const vrmByVehicleId = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle.vrm]));
+  const upcomingWork = (upcomingWorkRows ?? []).map((row) => ({
+    id: row.id,
+    vrm: vrmByVehicleId.get(row.vehicle_id) ?? "Unknown vehicle",
+    notes: row.notes,
+    scheduledDate: row.scheduled_date,
+    scheduledTime: row.scheduled_time,
+    garageName: row.garage?.name ?? "the garage",
+  }));
 
   const motByVehicle = new Map<string, MotRow[]>();
   for (const row of allMot ?? []) {
@@ -249,6 +300,41 @@ export default async function InsightsPage() {
               </p>
             </div>
           </div>
+
+          {upcomingWork.length > 0 && (
+            <div className="flex flex-col gap-2.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Upcoming appointments
+              </p>
+              <ul className={cardStyles("flex flex-col divide-y divide-border p-0")}>
+                {upcomingWork.map((job) => (
+                  <li key={job.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-primary-tint py-1.5 text-primary">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide">
+                        {describeUpcomingDate(job.scheduledDate)}
+                      </span>
+                      <span className="text-sm font-bold leading-tight">
+                        {job.scheduledDate.slice(8, 10)}/{job.scheduledDate.slice(5, 7)}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1 text-sm">
+                      <p className="truncate font-mono font-semibold tracking-wide text-foreground">
+                        {job.vrm}
+                        {job.scheduledTime && (
+                          <span className="ml-2 font-sans font-normal text-muted-foreground">
+                            {job.scheduledTime.slice(0, 5)}
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-muted-foreground">
+                        {job.notes} · {job.garageName}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <ul className="flex flex-col gap-2.5">
             {vehicleStats.map((stat) => (
